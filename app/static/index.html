@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customer Sales Intelligence</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #0F1419;
+            color: #E8EAED;
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 40px 24px;
+        }
+
+        /* Header */
+        .header {
+            margin-bottom: 48px;
+        }
+
+        .header h1 {
+            font-size: 48px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            letter-spacing: -0.02em;
+        }
+
+        .header .subtitle {
+            font-size: 16px;
+            color: #9AA0A6;
+        }
+
+        .header .subtitle code {
+            font-family: 'Monaco', monospace;
+            background: rgba(255,255,255,0.05);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .header-icons {
+            position: absolute;
+            top: 40px;
+            right: 40px;
+            display: flex;
+            gap: 16px;
+        }
+
+        .header-icon {
+            width: 40px;
+            height: 40px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 18px;
+        }
+
+        .header-icon:hover {
+            background: rgba(255,255,255,0.1);
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 40px;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+        }
+
+        .tab {
+            padding: 12px 24px;
+            background: none;
+            border: none;
+            color: #9AA0A6;
+            font-size: 15px;
+            font-weight: 500;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .tab:hover {
+            color: #E8EAED;
+        }
+
+        .tab.active {
+            color: #8AB4F8;
+            border-bottom-color: #8AB4F8;
+        }
+
+        /* Table Section */
+        .table-section {
+            background: rgba(255,255,255,0.02);
+            border-radius: 16px;
+            padding: 32px;
+            border: 1px solid rgba(255,255,255,0.06);
+        }
+
+        .table-header {
+            margin-bottom: 16px;
+        }
+
+        .table-header h2 {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .table-header .subtitle {
+            font-size: 14px;
+            color: #9AA0A6;
+        }
+
+        /* Table */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .data-table thead {
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .data-table th {
+            text-align: left;
+            padding: 16px 12px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #9AA0A6;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .data-table th.sortable {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .data-table th.sortable:hover {
+            color: #E8EAED;
+        }
+
+        .data-table tbody tr {
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+            transition: background 0.15s;
+            cursor: pointer;
+        }
+
+        .data-table tbody tr:hover {
+            background: rgba(255,255,255,0.03);
+        }
+
+        .data-table td {
+            padding: 20px 12px;
+            font-size: 14px;
+        }
+
+        /* Segment Badges */
+        .segment-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .segment-badge.vip {
+            background: rgba(255, 193, 7, 0.1);
+            color: #FFC107;
+        }
+
+        .segment-badge.high-value {
+            background: rgba(76, 175, 80, 0.1);
+            color: #4CAF50;
+        }
+
+        .segment-badge.growth {
+            background: rgba(33, 150, 243, 0.1);
+            color: #2196F3;
+        }
+
+        .segment-badge.at-risk {
+            background: rgba(244, 67, 54, 0.1);
+            color: #F44336;
+        }
+
+        .segment-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+        }
+
+        .segment-badge.vip .segment-dot { background: #FFC107; }
+        .segment-badge.high-value .segment-dot { background: #4CAF50; }
+        .segment-badge.growth .segment-dot { background: #2196F3; }
+        .segment-badge.at-risk .segment-dot { background: #F44336; }
+
+        /* Value Cells */
+        .value-large {
+            font-weight: 600;
+            font-family: 'Monaco', monospace;
+        }
+
+        .value-predicted {
+            color: #FFA726;
+            font-weight: 600;
+            font-family: 'Monaco', monospace;
+        }
+
+        .value-trend {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-family: 'Monaco', monospace;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .value-trend.positive {
+            color: #4CAF50;
+        }
+
+        .value-trend.negative {
+            color: #F44336;
+        }
+
+        .value-trend .arrow {
+            font-size: 10px;
+        }
+
+        .value-muted {
+            color: #9AA0A6;
+        }
+
+        /* Indicator Dot */
+        .indicator-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #F44336;
+            display: inline-block;
+            margin-left: 8px;
+        }
+
+        /* Loading State */
+        .loading {
+            text-align: center;
+            padding: 80px 20px;
+            color: #9AA0A6;
+        }
+
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(255,255,255,0.1);
+            border-top-color: #8AB4F8;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 16px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Filters */
+        .filters {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .filter-btn {
+            padding: 8px 16px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 8px;
+            color: #9AA0A6;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .filter-btn:hover {
+            background: rgba(255,255,255,0.08);
+            color: #E8EAED;
+        }
+
+        .filter-btn.active {
+            background: rgba(138, 180, 248, 0.15);
+            border-color: #8AB4F8;
+            color: #8AB4F8;
+        }
+
+        /* Search */
+        .search-box {
+            position: relative;
+            margin-bottom: 24px;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 12px 16px 12px 44px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 10px;
+            color: #E8EAED;
+            font-size: 14px;
+            font-family: 'Inter', sans-serif;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        .search-box input:focus {
+            background: rgba(255,255,255,0.08);
+            border-color: #8AB4F8;
+        }
+
+        .search-box input::placeholder {
+            color: #9AA0A6;
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #9AA0A6;
+            font-size: 16px;
+        }
+
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .data-table {
+                font-size: 13px;
+            }
+            .data-table td {
+                padding: 16px 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>Customer Sales Intelligence</h1>
+            <p class="subtitle">Predictive analytics powered by Gradient Boosting <code>(R² = 52%)</code></p>
+        </div>
+
+        <!-- Header Icons -->
+        <div class="header-icons">
+            <div class="header-icon" title="Pin">📌</div>
+            <div class="header-icon" title="Screenshot">📸</div>
+            <div class="header-icon" title="Record">🎥</div>
+            <div class="header-icon" title="Share">📤</div>
+            <div class="header-icon" title="Settings">⚙️</div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="tabs">
+            <button class="tab">Overview</button>
+            <button class="tab active">Customers</button>
+            <button class="tab">Analytics</button>
+            <button class="tab">Model</button>
+        </div>
+
+        <!-- Table Section -->
+        <div class="table-section">
+            <div class="table-header">
+                <h2>Customer Database</h2>
+                <p class="subtitle">Click any row for detailed view - Sort by column headers</p>
+            </div>
+
+            <!-- Search -->
+            <div class="search-box">
+                <span class="search-icon">🔍</span>
+                <input type="text" id="searchInput" placeholder="Search customers by ID, segment, or value...">
+            </div>
+
+            <!-- Filters -->
+            <div class="filters">
+                <button class="filter-btn active" data-filter="all">All Customers</button>
+                <button class="filter-btn" data-filter="vip">VIP</button>
+                <button class="filter-btn" data-filter="high-value">High Value</button>
+                <button class="filter-btn" data-filter="growth">Growth</button>
+                <button class="filter-btn" data-filter="at-risk">At Risk</button>
+            </div>
+
+            <!-- Data Table -->
+            <table class="data-table" id="customerTable">
+                <thead>
+                    <tr>
+                        <th class="sortable" data-sort="id">ID</th>
+                        <th class="sortable" data-sort="segment">Segment</th>
+                        <th class="sortable" data-sort="totalSpend">Total Spend</th>
+                        <th class="sortable" data-sort="predicted">Predicted ↓</th>
+                        <th class="sortable" data-sort="trend">Trend</th>
+                        <th class="sortable" data-sort="orders">Orders</th>
+                        <th class="sortable" data-sort="lastPurchase">Last Purchase</th>
+                        <th class="sortable" data-sort="avgOrder">Avg Order</th>
+                    </tr>
+                </thead>
+                <tbody id="customerTableBody">
+                    <!-- Data will be inserted here -->
+                </tbody>
+            </table>
+
+            <!-- Loading State -->
+            <div class="loading" id="loadingState">
+                <div class="loading-spinner"></div>
+                <p>Loading customer data...</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Sample customer data (replace with API call)
+        const customers = [
+            { id: 14646, segment: 'vip', totalSpend: 384000, predicted: 47000, trend: -14000, orders: 110, lastPurchase: '3d', avgOrder: 137 },
+            { id: 15939, segment: 'high-value', totalSpend: 8200, predicted: 4400, trend: 1100, orders: 11, lastPurchase: '19d', avgOrder: 56 },
+            { id: 14936, segment: 'high-value', totalSpend: 7900, predicted: 3000, trend: 484, orders: 6, lastPurchase: '14d', avgOrder: 24 },
+            { id: 12714, segment: 'high-value', totalSpend: 12000, predicted: 2100, trend: 339, orders: 10, lastPurchase: '18d', avgOrder: 21 },
+            { id: 18225, segment: 'high-value', totalSpend: 9200, predicted: 2100, trend: -464, orders: 19, lastPurchase: '43d', avgOrder: 23 },
+            { id: 13115, segment: 'growth', totalSpend: 4100, predicted: 1400, trend: 879, orders: 7, lastPurchase: '23d', avgOrder: 16 },
+            { id: 17838, segment: 'growth', totalSpend: 5600, predicted: 1300, trend: -752, orders: 11, lastPurchase: '131d', avgOrder: 21 },
+            { id: 12782, segment: 'growth', totalSpend: 3900, predicted: 1300, trend: -1100, orders: 9, lastPurchase: '92d', avgOrder: 20 },
+            { id: 14934, segment: 'growth', totalSpend: 2400, predicted: 1200, trend: -829, orders: 4, lastPurchase: '121d', avgOrder: 18 },
+            { id: 16241, segment: 'growth', totalSpend: 2700, predicted: 879, trend: 409, orders: 8, lastPurchase: '16d', avgOrder: 5 },
+        ];
+
+        let currentFilter = 'all';
+        let sortColumn = 'predicted';
+        let sortDirection = 'desc';
+
+        // Format currency
+        const formatCurrency = (value) => {
+            if (value >= 1000000) return `£${(value / 1000).toFixed(0)}K`;
+            if (value >= 1000) return `£${(value / 1000).toFixed(1)}K`;
+            return `£${value}`;
+        };
+
+        // Render table
+        function renderTable() {
+            const tbody = document.getElementById('customerTableBody');
+            const loading = document.getElementById('loadingState');
+            
+            // Filter customers
+            let filteredData = customers;
+            if (currentFilter !== 'all') {
+                filteredData = customers.filter(c => c.segment === currentFilter);
+            }
+
+            // Sort customers
+            filteredData.sort((a, b) => {
+                let aVal = a[sortColumn];
+                let bVal = b[sortColumn];
+                
+                if (sortColumn === 'lastPurchase') {
+                    aVal = parseInt(a[sortColumn]);
+                    bVal = parseInt(b[sortColumn]);
+                }
+                
+                if (sortDirection === 'asc') {
+                    return aVal > bVal ? 1 : -1;
+                } else {
+                    return aVal < bVal ? 1 : -1;
+                }
+            });
+
+            // Build HTML
+            const html = filteredData.map(customer => {
+                const segmentClass = customer.segment.replace(' ', '-');
+                const segmentLabel = customer.segment.charAt(0).toUpperCase() + customer.segment.slice(1).replace('-', ' ');
+                const trendClass = customer.trend >= 0 ? 'positive' : 'negative';
+                const trendArrow = customer.trend >= 0 ? '↗' : '↘';
+                
+                return `
+                    <tr onclick="viewCustomer(${customer.id})">
+                        <td class="value-muted">#${customer.id}</td>
+                        <td>
+                            <span class="segment-badge ${segmentClass}">
+                                <span class="segment-dot"></span>
+                                ${segmentLabel}
+                            </span>
+                        </td>
+                        <td class="value-large">${formatCurrency(customer.totalSpend)}</td>
+                        <td class="value-predicted">${formatCurrency(customer.predicted)}</td>
+                        <td>
+                            <span class="value-trend ${trendClass}">
+                                <span class="arrow">${trendArrow}</span>
+                                ${formatCurrency(Math.abs(customer.trend))}
+                            </span>
+                        </td>
+                        <td>${customer.orders}${customer.orders > 100 ? '<span class="indicator-dot"></span>' : ''}</td>
+                        <td>${customer.lastPurchase}</td>
+                        <td class="value-muted">${formatCurrency(customer.avgOrder)}</td>
+                    </tr>
+                `;
+            }).join('');
+
+            tbody.innerHTML = html;
+            loading.style.display = 'none';
+        }
+
+        // Filter buttons
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                currentFilter = this.dataset.filter;
+                renderTable();
+            });
+        });
+
+        // Sort columns
+        document.querySelectorAll('.sortable').forEach(th => {
+            th.addEventListener('click', function() {
+                const newColumn = this.dataset.sort;
+                if (sortColumn === newColumn) {
+                    sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+                } else {
+                    sortColumn = newColumn;
+                    sortDirection = 'desc';
+                }
+                renderTable();
+            });
+        });
+
+        // Search
+        document.getElementById('searchInput').addEventListener('input', function(e) {
+            const query = e.target.value.toLowerCase();
+            const rows = document.querySelectorAll('#customerTableBody tr');
+            
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(query) ? '' : 'none';
+            });
+        });
+
+        // View customer detail
+        function viewCustomer(id) {
+            alert(`Customer #${id} detail view will open here`);
+        }
+
+        // Initialize
+        renderTable();
+    </script>
+</body>
+</html>
