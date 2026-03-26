@@ -1,46 +1,10 @@
-# Python
 __pycache__/
-*.py[cod]
-*$py.class
-*.so
-.Python
+*.pyc
+*.pyo
+.venv/
+.env
+.idea/
+.DS_Store
 *.egg-info/
 dist/
 build/
-.venv/
-venv/
-ENV/
-
-# IDE
-.vscode/
-.idea/
-*.swp
-
-# OS
-.DS_Store
-Thumbs.db
-
-# Environment
-.env
-.env.local
-
-# Uploads
-uploads/*
-!uploads/.gitkeep
-
-# Models
-models/*.pkl
-!models/.gitkeep
-
-# Data
-data/*
-!data/.gitkeep
-
-# Logs
-*.log
-logs/
-
-# Testing
-.pytest_cache/
-.coverage
-htmlcov/

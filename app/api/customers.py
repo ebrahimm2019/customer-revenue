@@ -1,295 +1,161 @@
 """
-Customer API Routes
+Customer API Routes - Real Data
 """
-
-from fastapi import APIRouter, HTTPException, Query
-from typing import List, Optional
-from pydantic import BaseModel
-from enum import Enum
+from fastapi import APIRouter, HTTPException
+from typing import Optional
+import numpy as np
 
 router = APIRouter()
 
-# ════════════════════════════════════════════════════════════════════════════
-# MODELS
-# ════════════════════════════════════════════════════════════════════════════
+def get_state():
+    from app.main import app_state
+    return app_state
 
-class SegmentEnum(str, Enum):
-    VIP = "VIP"
-    HIGH_VALUE = "High Value"
-    GROWTH = "Growth"
-    AT_RISK = "At Risk"
-
-class Customer(BaseModel):
-    id: int
-    segment: SegmentEnum
-    totalSpend: float
-    predicted: float
-    trend: float
-    orders: int
-    lastPurchase: str
-    avgOrder: float
-    recency: int
-    frequency: int
-    tenure: int
-    uniqueProducts: int
-    recentSpend: float
-    healthScore: Optional[float] = None
-    healthGrade: Optional[str] = None
-
-class CustomerDetail(Customer):
-    purchaseHistory: Optional[List[dict]] = None
-    recommendations: Optional[List[str]] = None
-
-# ════════════════════════════════════════════════════════════════════════════
-# MOCK DATA (Replace with database queries)
-# ════════════════════════════════════════════════════════════════════════════
-
-MOCK_CUSTOMERS = [
-    {
-        "id": 14646,
-        "segment": "VIP",
-        "totalSpend": 384000,
-        "predicted": 47000,
-        "trend": -14000,
-        "orders": 110,
-        "lastPurchase": "3d",
-        "avgOrder": 137,
-        "recency": 3,
-        "frequency": 110,
-        "tenure": 576,
-        "uniqueProducts": 766,
-        "recentSpend": 56674,
-        "healthScore": 95,
-        "healthGrade": "A"
-    },
-    {
-        "id": 15939,
-        "segment": "High Value",
-        "totalSpend": 8200,
-        "predicted": 4400,
-        "trend": 1100,
-        "orders": 11,
-        "lastPurchase": "19d",
-        "avgOrder": 56,
-        "recency": 19,
-        "frequency": 11,
-        "tenure": 213,
-        "uniqueProducts": 52,
-        "recentSpend": 3177,
-        "healthScore": 82,
-        "healthGrade": "B"
-    },
-    {
-        "id": 14936,
-        "segment": "High Value",
-        "totalSpend": 7900,
-        "predicted": 3000,
-        "trend": 484,
-        "orders": 6,
-        "lastPurchase": "14d",
-        "avgOrder": 24,
-        "recency": 14,
-        "frequency": 6,
-        "tenure": 422,
-        "uniqueProducts": 195,
-        "recentSpend": 2060,
-        "healthScore": 78,
-        "healthGrade": "B"
-    },
-    {
-        "id": 12714,
-        "segment": "High Value",
-        "totalSpend": 12000,
-        "predicted": 2100,
-        "trend": 339,
-        "orders": 10,
-        "lastPurchase": "18d",
-        "avgOrder": 21,
-        "recency": 18,
-        "frequency": 10,
-        "tenure": 574,
-        "uniqueProducts": 376,
-        "recentSpend": 1307,
-        "healthScore": 85,
-        "healthGrade": "A"
-    },
-    {
-        "id": 18225,
-        "segment": "High Value",
-        "totalSpend": 9200,
-        "predicted": 2100,
-        "trend": -464,
-        "orders": 19,
-        "lastPurchase": "43d",
-        "avgOrder": 23,
-        "recency": 43,
-        "frequency": 19,
-        "tenure": 574,
-        "uniqueProducts": 217,
-        "recentSpend": 587,
-        "healthScore": 72,
-        "healthGrade": "B"
-    },
-    {
-        "id": 13115,
-        "segment": "Growth",
-        "totalSpend": 4100,
-        "predicted": 1400,
-        "trend": 879,
-        "orders": 7,
-        "lastPurchase": "23d",
-        "avgOrder": 16,
-        "recency": 23,
-        "frequency": 7,
-        "tenure": 438,
-        "uniqueProducts": 161,
-        "recentSpend": 879,
-        "healthScore": 68,
-        "healthGrade": "C"
-    },
-    {
-        "id": 17838,
-        "segment": "Growth",
-        "totalSpend": 5600,
-        "predicted": 1300,
-        "trend": -752,
-        "orders": 11,
-        "lastPurchase": "131d",
-        "avgOrder": 21,
-        "recency": 131,
-        "frequency": 11,
-        "tenure": 469,
-        "uniqueProducts": 111,
-        "recentSpend": 0,
-        "healthScore": 45,
-        "healthGrade": "C"
-    },
-    {
-        "id": 12782,
-        "segment": "Growth",
-        "totalSpend": 3900,
-        "predicted": 1300,
-        "trend": -1100,
-        "orders": 9,
-        "lastPurchase": "92d",
-        "avgOrder": 20,
-        "recency": 92,
-        "frequency": 9,
-        "tenure": 358,
-        "uniqueProducts": 121,
-        "recentSpend": 0,
-        "healthScore": 52,
-        "healthGrade": "C"
-    },
-    {
-        "id": 14934,
-        "segment": "Growth",
-        "totalSpend": 2400,
-        "predicted": 1200,
-        "trend": -829,
-        "orders": 4,
-        "lastPurchase": "121d",
-        "avgOrder": 18,
-        "recency": 121,
-        "frequency": 4,
-        "tenure": 280,
-        "uniqueProducts": 89,
-        "recentSpend": 0,
-        "healthScore": 38,
-        "healthGrade": "D"
-    },
-    {
-        "id": 16241,
-        "segment": "Growth",
-        "totalSpend": 2700,
-        "predicted": 879,
-        "trend": 409,
-        "orders": 8,
-        "lastPurchase": "16d",
-        "avgOrder": 5,
-        "recency": 16,
-        "frequency": 8,
-        "tenure": 249,
-        "uniqueProducts": 355,
-        "recentSpend": 570,
-        "healthScore": 64,
-        "healthGrade": "C"
-    }
-]
-
-# ════════════════════════════════════════════════════════════════════════════
-# ENDPOINTS
-# ════════════════════════════════════════════════════════════════════════════
-
-@router.get("/customers", response_model=List[Customer])
+@router.get("/customers")
 async def get_customers(
-    segment: Optional[SegmentEnum] = None,
-    min_value: Optional[float] = None,
-    max_recency: Optional[int] = None,
-    limit: int = Query(default=100, le=1000),
-    offset: int = Query(default=0, ge=0)
+    segment: Optional[str] = None,
+    search: Optional[str] = None,
+    sort_by: str = "pred_3stage",
+    sort_dir: str = "desc",
+    limit: int = 100,
+    offset: int = 0,
 ):
-    """
-    Get customer list with filtering and pagination
-    
-    - **segment**: Filter by customer segment
-    - **min_value**: Minimum predicted revenue
-    - **max_recency**: Maximum days since last purchase
-    """
-    # TODO: Replace with database query
-    customers = MOCK_CUSTOMERS.copy()
-    
-    # Apply filters
-    if segment:
-        customers = [c for c in customers if c['segment'] == segment.value]
-    if min_value:
-        customers = [c for c in customers if c['predicted'] >= min_value]
-    if max_recency:
-        customers = [c for c in customers if c['recency'] <= max_recency]
-    
-    # Pagination
-    return customers[offset:offset + limit]
+    state = get_state()
+    df = state['customers'].copy()
+    df.index = df.index.astype(int)
 
-@router.get("/customers/{customer_id}", response_model=CustomerDetail)
-async def get_customer_detail(customer_id: int):
-    """Get detailed customer information"""
-    # TODO: Replace with database query
-    customer = next((c for c in MOCK_CUSTOMERS if c['id'] == customer_id), None)
-    
-    if not customer:
-        raise HTTPException(status_code=404, detail="Customer not found")
-    
-    # Add recommendations
-    recommendations = []
-    if customer['segment'] == 'VIP':
-        recommendations = [
-            "Assign personal account manager",
-            "Quarterly business review",
-            "Exclusive product access"
-        ]
-    elif customer['segment'] == 'High Value':
-        recommendations = [
-            "Volume discount offer (10-15%)",
-            "Product bundle upsell",
-            "Free express shipping"
-        ]
-    elif customer['segment'] == 'Growth':
-        recommendations = [
-            "Cross-sell campaign",
-            "Loyalty rewards program",
-            "Product recommendations"
-        ]
+    if segment and segment != 'all':
+        seg_map = {'vip': 'VIP', 'high-value': 'High Value', 'growth': 'Growth', 'at-risk': 'At Risk'}
+        seg = seg_map.get(segment, segment)
+        df = df[df['segment'] == seg]
+
+    if search:
+        q = search.lower()
+        mask = df.index.astype(str).str.contains(q)
+        mask |= df['segment'].str.lower().str.contains(q)
+        df = df[mask]
+
+    asc = sort_dir == 'asc'
+    if sort_by in df.columns:
+        df = df.sort_values(sort_by, ascending=asc)
     else:
-        recommendations = [
-            "Win-back email (20% discount)",
-            "Reactivation campaign",
-            "Customer feedback survey"
-        ]
-    
-    customer['recommendations'] = recommendations
-    customer['purchaseHistory'] = [
-        {"date": "2025-03-22", "amount": 5420, "items": 45},
-        {"date": "2025-03-15", "amount": 3210, "items": 28}
-    ]
-    
-    return customer
+        df = df.sort_values('pred_3stage', ascending=False)
+
+    total = len(df)
+    df = df.iloc[offset:offset + limit]
+
+    customers = []
+    for cid, row in df.iterrows():
+        trend = row.get('revenue_growth_rate', 0) * row.get('rev_90d', 0)
+        customers.append({
+            'id': int(cid),
+            'segment': row['segment'],
+            'totalSpend': round(float(row['monetary_total']), 0),
+            'predicted': round(float(row['pred_3stage']), 0),
+            'trend': round(float(trend), 0),
+            'orders': int(row['frequency']),
+            'lastPurchase': f"{int(row['recency'])}d",
+            'avgOrder': round(float(row['aov']), 0),
+            'recency': int(row['recency']),
+            'frequency': int(row['frequency']),
+            'tenure': int(row['tenure_days']),
+            'uniqueProducts': int(row.get('avg_uniq_prods', 0) * row['frequency']),
+            'recentSpend': round(float(row['rev_90d']), 0),
+            'healthScore': float(row['health_score']),
+            'healthGrade': row['health_grade'],
+            'pBuy': round(float(row['p_buy']), 3),
+            'actualHoldout': round(float(row['actual_holdout']), 0),
+        })
+
+    return {"customers": customers, "total": total, "offset": offset, "limit": limit}
+
+
+@router.get("/customers/{customer_id}")
+async def get_customer_detail(customer_id: int):
+    state = get_state()
+    df = state['customers']
+    df.index = df.index.astype(int)
+
+    if customer_id not in df.index:
+        raise HTTPException(status_code=404, detail="Customer not found")
+
+    row = df.loc[customer_id]
+    trend = row.get('revenue_growth_rate', 0) * row.get('rev_90d', 0)
+
+    # Feature details
+    features = {
+        'frequency': int(row['frequency']),
+        'monetary_total': round(float(row['monetary_total']), 2),
+        'recency': int(row['recency']),
+        'tenure_days': int(row['tenure_days']),
+        'customer_age': int(row['customer_age']),
+        'aov': round(float(row['aov']), 2),
+        'rev_30d': round(float(row['rev_30d']), 2),
+        'rev_90d': round(float(row['rev_90d']), 2),
+        'rev_180d': round(float(row['rev_180d']), 2),
+        'rev_365d': round(float(row['rev_365d']), 2),
+        'revenue_growth_rate': round(float(row['revenue_growth_rate']), 3),
+        'revenue_trend_ratio': round(float(row['revenue_trend_ratio']), 3),
+        'freq_rate': round(float(row['freq_rate']), 4),
+        'maturity': round(float(row['maturity']), 4),
+        'recent_ratio': round(float(row['recent_ratio']), 4),
+        'avg_basket_rev': round(float(row['avg_basket_rev']), 2),
+        'avg_basket_qty': round(float(row['avg_basket_qty']), 1),
+        'avg_uniq_prods': round(float(row['avg_uniq_prods']), 1),
+        'max_order': round(float(row['max_order']), 2),
+        'order_cv': round(float(row['order_cv']), 3),
+        'q4_frac': round(float(row['q4_frac']), 3),
+        'weekend_ratio': round(float(row['weekend_ratio']), 3),
+        'is_uk': int(row['is_uk']),
+        'n_countries': int(row['n_countries']),
+        'cancel_count': int(row['cancel_count']),
+        'return_rate': round(float(row['return_rate']), 3),
+    }
+
+    # Recommendations based on segment
+    segment = row['segment']
+    recs = []
+    if segment == 'VIP':
+        recs = ["Assign personal account manager", "Quarterly business review",
+                "Exclusive product access", "24/7 priority support"]
+    elif segment == 'High Value':
+        recs = ["Volume discount offer (10-15%)", "Product bundle upsell",
+                "Free express shipping", "Loyalty programme enrollment"]
+    elif segment == 'Growth':
+        recs = ["Cross-sell campaign", "Loyalty rewards programme",
+                "Product recommendations", "Engagement email series"]
+    else:
+        if row['recency'] > 180:
+            recs = ["Win-back offer (25% discount)", "Reactivation email sequence",
+                    "Customer feedback survey", "Last-chance promotion"]
+        else:
+            recs = ["Gentle re-engagement email", "Product update notification",
+                    "Loyalty incentive offer", "Personalised recommendations"]
+
+    # Revenue breakdown for chart
+    rev_windows = {
+        'Last 30 days': float(row['rev_30d']),
+        'Last 90 days': float(row['rev_90d']),
+        'Last 180 days': float(row['rev_180d']),
+        'Last 365 days': float(row['rev_365d']),
+        'Lifetime': float(row['monetary_total']),
+    }
+
+    return {
+        'id': int(customer_id),
+        'segment': segment,
+        'totalSpend': round(float(row['monetary_total']), 0),
+        'predicted': round(float(row['pred_3stage']), 0),
+        'trend': round(float(trend), 0),
+        'orders': int(row['frequency']),
+        'lastPurchase': f"{int(row['recency'])}d",
+        'avgOrder': round(float(row['aov']), 0),
+        'recency': int(row['recency']),
+        'healthScore': float(row['health_score']),
+        'healthGrade': row['health_grade'],
+        'pBuy': round(float(row['p_buy']), 3),
+        'actualHoldout': round(float(row['actual_holdout']), 0),
+        'features': features,
+        'recommendations': recs,
+        'revenueWindows': rev_windows,
+    }

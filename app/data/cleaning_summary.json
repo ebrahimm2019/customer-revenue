@@ -1,0 +1,30 @@
+{
+  "Missing Customer ID": {
+    "rows": 243007,
+    "pct": 22.8,
+    "revenue": 2638958.1799999997
+  },
+  "Cancellations": {
+    "rows": 19494,
+    "pct": 1.8,
+    "revenue": -1526667.86
+  },
+  "Bad Price": {
+    "rows": 6207,
+    "pct": 0.6,
+    "revenue": -158676.14
+  },
+  "Non-product": {
+    "rows": 5348,
+    "pct": 0.5,
+    "revenue": 63908.217000000004
+  },
+  "Duplicates": {
+    "rows": 34337,
+    "pct": 3.2,
+    "revenue": 432268.72
+  },
+  "total_raw": 1067371,
+  "total_clean": 776901,
+  "pct_retained": 72.8
+}

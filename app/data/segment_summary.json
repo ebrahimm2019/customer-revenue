@@ -1,0 +1,34 @@
+{
+  "At Risk": {
+    "count": 1774,
+    "avg_predicted": 67.42858062752222,
+    "total_predicted": 119618.30203322442,
+    "avg_spend": 609.4132468996619,
+    "avg_recency": 132.54847801578353,
+    "avg_frequency": 1.76662908680947
+  },
+  "Growth": {
+    "count": 1914,
+    "avg_predicted": 340.78418561948644,
+    "total_predicted": 652260.9312756971,
+    "avg_spend": 1074.5611233019854,
+    "avg_recency": 63.32549634273772,
+    "avg_frequency": 3.7565308254963425
+  },
+  "High Value": {
+    "count": 455,
+    "avg_predicted": 1798.8116811838938,
+    "total_predicted": 818459.3149386717,
+    "avg_spend": 4525.262,
+    "avg_recency": 26.33186813186813,
+    "avg_frequency": 9.982417582417582
+  },
+  "VIP": {
+    "count": 107,
+    "avg_predicted": 11066.190211869578,
+    "total_predicted": 1184082.3526700449,
+    "avg_spend": 29394.321028037382,
+    "avg_recency": 15.299065420560748,
+    "avg_frequency": 31.710280373831775
+  }
+}

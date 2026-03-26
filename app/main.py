@@ -1,185 +1,98 @@
 """
-Customer Revenue Intelligence Platform - Production Ready
-Main FastAPI Application
+Customer Revenue Intelligence Platform
+Main FastAPI Application - Dynamic with Real Data
 """
-
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import HTMLResponse, FileResponse
+from fastapi.responses import FileResponse
 from contextlib import asynccontextmanager
-import os
+import os, pickle, json
+import pandas as pd
+import numpy as np
 from pathlib import Path
 
-# Import routers
 from app.api.customers import router as customers_router
 from app.api.predictions import router as predictions_router
 from app.api.campaigns import router as campaigns_router
 from app.api.analytics import router as analytics_router
 
-# Configuration
 BASE_DIR = Path(__file__).parent
 STATIC_DIR = BASE_DIR / "static"
-UPLOADS_DIR = BASE_DIR / "uploads"
+DATA_DIR = BASE_DIR / "data"
+MODELS_DIR = BASE_DIR / "models"
 
-# Ensure directories exist
-STATIC_DIR.mkdir(exist_ok=True)
-UPLOADS_DIR.mkdir(exist_ok=True)
+# Global state
+app_state = {}
 
-# Lifespan for startup/shutdown events
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup
-    print("🚀 Starting Customer Revenue Intelligence Platform...")
-    print(f"📁 Static directory: {STATIC_DIR}")
-    print(f"📤 Uploads directory: {UPLOADS_DIR}")
-    
-    # Load ML model if exists
-    model_path = BASE_DIR / "models" / "trained_model.pkl"
-    if model_path.exists():
-        print(f"✓ Model found: {model_path}")
-        # TODO: Load model into memory
-    else:
-        print(f"⚠ No model found at {model_path}")
-    
-    yield
-    
-    # Shutdown
-    print("👋 Shutting down...")
+    print("Loading data and models...")
 
-# Create FastAPI app
+    # Load customer features
+    cf = pd.read_csv(DATA_DIR / "customer_features.csv", index_col=0)
+    app_state['customers'] = cf
+
+    # Load model
+    model_path = MODELS_DIR / "three_stage_model.pkl"
+    if model_path.exists():
+        with open(model_path, 'rb') as f:
+            app_state['model'] = pickle.load(f)
+        print(f"✓ Three-Stage model loaded")
+
+    # Load supporting data
+    for fname in ['model_results.json', 'segment_summary.json', 'cleaning_summary.json', 'revenue_capture.json']:
+        fpath = DATA_DIR / fname
+        if fpath.exists():
+            with open(fpath) as f:
+                app_state[fname.replace('.json', '')] = json.load(f)
+
+    for fname in ['monthly_revenue.csv', 'feature_importance.csv', 'feature_correlations.csv',
+                   'top_products.csv', 'country_data.csv']:
+        fpath = DATA_DIR / fname
+        if fpath.exists():
+            app_state[fname.replace('.csv', '')] = pd.read_csv(fpath)
+
+    print(f"✓ Loaded {len(app_state['customers']):,} customers")
+    print(f"✓ Loaded {len(app_state.get('model_results', {}))} model results")
+    yield
+    print("Shutting down...")
+
 app = FastAPI(
     title="Customer Revenue Intelligence",
-    description="Predictive analytics and customer segmentation platform",
     version="2.0.0",
     lifespan=lifespan,
-    docs_url="/docs",
-    redoc_url="/redoc"
 )
 
-# CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Configure for production: ["https://yourdomain.com"]
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Include API routers
 app.include_router(customers_router, prefix="/api", tags=["Customers"])
 app.include_router(predictions_router, prefix="/api", tags=["Predictions"])
 app.include_router(campaigns_router, prefix="/api", tags=["Campaigns"])
 app.include_router(analytics_router, prefix="/api", tags=["Analytics"])
 
-# Root endpoint
-@app.get("/", response_class=HTMLResponse)
+@app.get("/")
 async def root():
-    """Serve the main UI"""
-    index_path = STATIC_DIR / "index.html"
-    if index_path.exists():
-        return FileResponse(index_path)
-    
-    # Fallback HTML if no index.html
-    return """
-    <!DOCTYPE html>
-    <html>
-    <head>
-        <title>Customer Revenue Intelligence</title>
-        <style>
-            body {
-                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-                background: #0F1419;
-                color: #E8EAED;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                height: 100vh;
-                margin: 0;
-            }
-            .container {
-                text-align: center;
-                max-width: 600px;
-                padding: 40px;
-            }
-            h1 {
-                font-size: 48px;
-                margin-bottom: 16px;
-            }
-            p {
-                font-size: 18px;
-                color: #9AA0A6;
-                margin-bottom: 32px;
-            }
-            .links {
-                display: flex;
-                gap: 16px;
-                justify-content: center;
-            }
-            a {
-                padding: 12px 24px;
-                background: #8AB4F8;
-                color: #0F1419;
-                text-decoration: none;
-                border-radius: 8px;
-                font-weight: 600;
-                transition: all 0.2s;
-            }
-            a:hover {
-                background: #A8C7FA;
-                transform: translateY(-2px);
-            }
-            .status {
-                display: inline-block;
-                width: 12px;
-                height: 12px;
-                background: #4CAF50;
-                border-radius: 50%;
-                margin-right: 8px;
-            }
-        </style>
-    </head>
-    <body>
-        <div class="container">
-            <h1>🚀 Customer Revenue Intelligence</h1>
-            <p><span class="status"></span> System is running</p>
-            <div class="links">
-                <a href="/docs">API Documentation</a>
-                <a href="/api/health">Health Check</a>
-            </div>
-        </div>
-    </body>
-    </html>
-    """
+    return FileResponse(STATIC_DIR / "index.html")
 
-# Health check endpoint
 @app.get("/api/health")
 async def health_check():
-    """Health check for Railway"""
     return {
         "status": "healthy",
-        "service": "Customer Revenue Intelligence",
-        "version": "2.0.0",
-        "environment": os.getenv("RAILWAY_ENVIRONMENT", "development")
+        "customers_loaded": len(app_state.get('customers', [])),
+        "model_loaded": 'model' in app_state,
     }
 
-# Serve static files (CSS, JS, images)
 if STATIC_DIR.exists():
     app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 
-# Run with: uvicorn app.main:app --host 0.0.0.0 --port 8000
 if __name__ == "__main__":
-    # main.py
-    import os
     import uvicorn
-    from fastapi import FastAPI
-
-    app = FastAPI()
-
-    if __name__ == "__main__":
-        uvicorn.run(
-            "main:app",
-            host="0.0.0.0",
-            port=int(os.environ.get("PORT", 8000)),
-            reload=True  # Remove in production
-        )
+    uvicorn.run("app.main:app", host="0.0.0.0",
+                port=int(os.environ.get("PORT", 8000)), reload=True)

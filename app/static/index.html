@@ -3,570 +3,980 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Customer Sales Intelligence</title>
+    <title>Customer Revenue Intelligence</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: #0F1419;
-            color: #E8EAED;
-            line-height: 1.5;
+            background: #0F1419; color: #E8EAED; line-height: 1.5;
             -webkit-font-smoothing: antialiased;
         }
-
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 40px 24px;
-        }
+        .container { max-width: 1400px; margin: 0 auto; padding: 32px 24px; }
 
         /* Header */
-        .header {
-            margin-bottom: 48px;
-        }
-
-        .header h1 {
-            font-size: 48px;
-            font-weight: 700;
-            margin-bottom: 8px;
-            letter-spacing: -0.02em;
-        }
-
-        .header .subtitle {
-            font-size: 16px;
-            color: #9AA0A6;
-        }
-
+        .header { margin-bottom: 32px; }
+        .header h1 { font-size: 36px; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 4px; }
+        .header .subtitle { font-size: 14px; color: #9AA0A6; }
         .header .subtitle code {
-            font-family: 'Monaco', monospace;
-            background: rgba(255,255,255,0.05);
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-size: 14px;
-        }
-
-        .header-icons {
-            position: absolute;
-            top: 40px;
-            right: 40px;
-            display: flex;
-            gap: 16px;
-        }
-
-        .header-icon {
-            width: 40px;
-            height: 40px;
-            background: rgba(255,255,255,0.05);
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: all 0.2s;
-            font-size: 18px;
-        }
-
-        .header-icon:hover {
-            background: rgba(255,255,255,0.1);
+            font-family: 'Monaco', monospace; background: rgba(255,255,255,0.05);
+            padding: 2px 8px; border-radius: 4px; font-size: 13px;
         }
 
         /* Tabs */
-        .tabs {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 40px;
-            border-bottom: 1px solid rgba(255,255,255,0.08);
-        }
-
+        .tabs { display: flex; gap: 4px; margin-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.08); }
         .tab {
-            padding: 12px 24px;
-            background: none;
-            border: none;
-            color: #9AA0A6;
-            font-size: 15px;
-            font-weight: 500;
-            cursor: pointer;
-            border-bottom: 2px solid transparent;
-            transition: all 0.2s;
-            font-family: 'Inter', sans-serif;
+            padding: 12px 24px; background: none; border: none; color: #9AA0A6;
+            font-size: 14px; font-weight: 500; cursor: pointer;
+            border-bottom: 2px solid transparent; transition: all 0.2s; font-family: 'Inter', sans-serif;
         }
+        .tab:hover { color: #E8EAED; }
+        .tab.active { color: #8AB4F8; border-bottom-color: #8AB4F8; }
 
-        .tab:hover {
-            color: #E8EAED;
-        }
+        /* Page containers */
+        .page { display: none; }
+        .page.active { display: block; }
 
-        .tab.active {
-            color: #8AB4F8;
-            border-bottom-color: #8AB4F8;
+        /* Cards */
+        .card {
+            background: rgba(255,255,255,0.02); border-radius: 14px;
+            padding: 24px; border: 1px solid rgba(255,255,255,0.06);
         }
+        .card-title { font-size: 13px; color: #9AA0A6; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; }
+        .card-value { font-size: 28px; font-weight: 700; font-family: 'Monaco', monospace; }
+        .card-sub { font-size: 12px; color: #9AA0A6; margin-top: 4px; }
 
-        /* Table Section */
-        .table-section {
-            background: rgba(255,255,255,0.02);
-            border-radius: 16px;
-            padding: 32px;
-            border: 1px solid rgba(255,255,255,0.06);
-        }
+        /* KPI Grid */
+        .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 32px; }
 
-        .table-header {
-            margin-bottom: 16px;
-        }
-
-        .table-header h2 {
-            font-size: 24px;
-            font-weight: 600;
-            margin-bottom: 8px;
-        }
-
-        .table-header .subtitle {
-            font-size: 14px;
-            color: #9AA0A6;
-        }
+        /* Segment Colors */
+        .seg-vip { color: #FFC107; }
+        .seg-high { color: #4CAF50; }
+        .seg-growth { color: #2196F3; }
+        .seg-risk { color: #F44336; }
+        .bg-vip { background: rgba(255,193,7,0.1); border-color: rgba(255,193,7,0.2); }
+        .bg-high { background: rgba(76,175,80,0.1); border-color: rgba(76,175,80,0.2); }
+        .bg-growth { background: rgba(33,150,243,0.1); border-color: rgba(33,150,243,0.2); }
+        .bg-risk { background: rgba(244,67,54,0.1); border-color: rgba(244,67,54,0.2); }
 
         /* Table */
-        .data-table {
-            width: 100%;
-            border-collapse: collapse;
-        }
+        .table-section { background: rgba(255,255,255,0.02); border-radius: 14px; padding: 24px; border: 1px solid rgba(255,255,255,0.06); }
+        .table-header { margin-bottom: 16px; }
+        .table-header h2 { font-size: 20px; font-weight: 600; margin-bottom: 4px; }
+        .table-header .subtitle { font-size: 13px; color: #9AA0A6; }
 
-        .data-table thead {
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-        }
-
+        .data-table { width: 100%; border-collapse: collapse; }
+        .data-table thead { border-bottom: 1px solid rgba(255,255,255,0.1); }
         .data-table th {
-            text-align: left;
-            padding: 16px 12px;
-            font-size: 12px;
-            font-weight: 600;
-            color: #9AA0A6;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
+            text-align: left; padding: 12px 10px; font-size: 11px; font-weight: 600;
+            color: #9AA0A6; text-transform: uppercase; letter-spacing: 0.05em;
         }
+        .data-table th.sortable { cursor: pointer; user-select: none; }
+        .data-table th.sortable:hover { color: #E8EAED; }
+        .data-table tbody tr { border-bottom: 1px solid rgba(255,255,255,0.04); transition: background 0.15s; cursor: pointer; }
+        .data-table tbody tr:hover { background: rgba(255,255,255,0.03); }
+        .data-table td { padding: 14px 10px; font-size: 13px; }
 
-        .data-table th.sortable {
-            cursor: pointer;
-            user-select: none;
-        }
-
-        .data-table th.sortable:hover {
-            color: #E8EAED;
-        }
-
-        .data-table tbody tr {
-            border-bottom: 1px solid rgba(255,255,255,0.04);
-            transition: background 0.15s;
-            cursor: pointer;
-        }
-
-        .data-table tbody tr:hover {
-            background: rgba(255,255,255,0.03);
-        }
-
-        .data-table td {
-            padding: 20px 12px;
-            font-size: 14px;
-        }
-
-        /* Segment Badges */
+        /* Badges */
         .segment-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            padding: 4px 12px;
-            border-radius: 12px;
-            font-size: 12px;
-            font-weight: 600;
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 3px 10px; border-radius: 10px; font-size: 11px; font-weight: 600;
         }
-
-        .segment-badge.vip {
-            background: rgba(255, 193, 7, 0.1);
-            color: #FFC107;
-        }
-
-        .segment-badge.high-value {
-            background: rgba(76, 175, 80, 0.1);
-            color: #4CAF50;
-        }
-
-        .segment-badge.growth {
-            background: rgba(33, 150, 243, 0.1);
-            color: #2196F3;
-        }
-
-        .segment-badge.at-risk {
-            background: rgba(244, 67, 54, 0.1);
-            color: #F44336;
-        }
-
-        .segment-dot {
-            width: 6px;
-            height: 6px;
-            border-radius: 50%;
-        }
-
+        .segment-badge.vip { background: rgba(255,193,7,0.1); color: #FFC107; }
+        .segment-badge.high-value { background: rgba(76,175,80,0.1); color: #4CAF50; }
+        .segment-badge.growth { background: rgba(33,150,243,0.1); color: #2196F3; }
+        .segment-badge.at-risk { background: rgba(244,67,54,0.1); color: #F44336; }
+        .segment-dot { width: 5px; height: 5px; border-radius: 50%; }
         .segment-badge.vip .segment-dot { background: #FFC107; }
         .segment-badge.high-value .segment-dot { background: #4CAF50; }
         .segment-badge.growth .segment-dot { background: #2196F3; }
         .segment-badge.at-risk .segment-dot { background: #F44336; }
 
-        /* Value Cells */
-        .value-large {
-            font-weight: 600;
-            font-family: 'Monaco', monospace;
-        }
-
-        .value-predicted {
-            color: #FFA726;
-            font-weight: 600;
-            font-family: 'Monaco', monospace;
-        }
-
-        .value-trend {
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            font-family: 'Monaco', monospace;
-            font-size: 13px;
-            font-weight: 600;
-        }
-
-        .value-trend.positive {
-            color: #4CAF50;
-        }
-
-        .value-trend.negative {
-            color: #F44336;
-        }
-
-        .value-trend .arrow {
-            font-size: 10px;
-        }
-
-        .value-muted {
-            color: #9AA0A6;
-        }
-
-        /* Indicator Dot */
-        .indicator-dot {
-            width: 6px;
-            height: 6px;
-            border-radius: 50%;
-            background: #F44336;
-            display: inline-block;
-            margin-left: 8px;
-        }
-
-        /* Loading State */
-        .loading {
-            text-align: center;
-            padding: 80px 20px;
-            color: #9AA0A6;
-        }
-
-        .loading-spinner {
-            width: 40px;
-            height: 40px;
-            border: 3px solid rgba(255,255,255,0.1);
-            border-top-color: #8AB4F8;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 16px;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
+        .value-large { font-weight: 600; font-family: 'Monaco', monospace; }
+        .value-predicted { color: #FFA726; font-weight: 600; font-family: 'Monaco', monospace; }
+        .value-trend { display: inline-flex; align-items: center; gap: 4px; font-family: 'Monaco', monospace; font-size: 12px; font-weight: 600; }
+        .value-trend.positive { color: #4CAF50; }
+        .value-trend.negative { color: #F44336; }
+        .value-muted { color: #9AA0A6; }
 
         /* Filters */
-        .filters {
-            display: flex;
-            gap: 12px;
-            margin-bottom: 24px;
-        }
-
+        .controls-row { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; align-items: center; }
         .filter-btn {
-            padding: 8px 16px;
-            background: rgba(255,255,255,0.05);
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 8px;
-            color: #9AA0A6;
-            font-size: 13px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s;
-            font-family: 'Inter', sans-serif;
+            padding: 7px 16px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 8px; color: #9AA0A6; font-size: 12px; font-weight: 500; cursor: pointer;
+            transition: all 0.2s; font-family: 'Inter', sans-serif;
         }
+        .filter-btn:hover { background: rgba(255,255,255,0.08); color: #E8EAED; }
+        .filter-btn.active { background: rgba(138,180,248,0.15); border-color: #8AB4F8; color: #8AB4F8; }
 
-        .filter-btn:hover {
-            background: rgba(255,255,255,0.08);
-            color: #E8EAED;
-        }
-
-        .filter-btn.active {
-            background: rgba(138, 180, 248, 0.15);
-            border-color: #8AB4F8;
-            color: #8AB4F8;
-        }
-
-        /* Search */
-        .search-box {
-            position: relative;
-            margin-bottom: 24px;
-        }
-
+        .search-box { position: relative; flex: 1; min-width: 200px; }
         .search-box input {
-            width: 100%;
-            padding: 12px 16px 12px 44px;
-            background: rgba(255,255,255,0.05);
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 10px;
-            color: #E8EAED;
-            font-size: 14px;
-            font-family: 'Inter', sans-serif;
-            outline: none;
-            transition: all 0.2s;
+            width: 100%; padding: 9px 14px 9px 36px; background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: #E8EAED;
+            font-size: 13px; font-family: 'Inter', sans-serif; outline: none; transition: all 0.2s;
         }
+        .search-box input:focus { background: rgba(255,255,255,0.08); border-color: #8AB4F8; }
+        .search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #9AA0A6; font-size: 14px; }
 
-        .search-box input:focus {
-            background: rgba(255,255,255,0.08);
-            border-color: #8AB4F8;
+        /* Charts grid */
+        .charts-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(420px, 1fr)); gap: 20px; margin-bottom: 24px; }
+        .chart-card { background: rgba(255,255,255,0.02); border-radius: 14px; padding: 20px; border: 1px solid rgba(255,255,255,0.06); }
+        .chart-card h3 { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+        .chart-card .chart-sub { font-size: 12px; color: #9AA0A6; margin-bottom: 12px; }
+        .chart-container { position: relative; width: 100%; height: 280px; }
+
+        /* Pagination */
+        .pagination { display: flex; gap: 8px; justify-content: center; align-items: center; margin-top: 20px; }
+        .page-btn {
+            padding: 6px 14px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 6px; color: #9AA0A6; font-size: 12px; cursor: pointer; font-family: 'Inter', sans-serif;
         }
+        .page-btn:hover { background: rgba(255,255,255,0.08); color: #E8EAED; }
+        .page-btn.active { background: rgba(138,180,248,0.15); border-color: #8AB4F8; color: #8AB4F8; }
+        .page-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+        .page-info { color: #9AA0A6; font-size: 12px; }
 
-        .search-box input::placeholder {
-            color: #9AA0A6;
+        /* Modal / Detail panel */
+        .modal-overlay {
+            display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7);
+            z-index: 1000; justify-content: center; align-items: flex-start; padding: 40px 20px;
+            overflow-y: auto;
         }
-
-        .search-icon {
-            position: absolute;
-            left: 16px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #9AA0A6;
-            font-size: 16px;
+        .modal-overlay.active { display: flex; }
+        .modal {
+            background: #1A1F25; border-radius: 16px; padding: 32px; max-width: 800px;
+            width: 100%; border: 1px solid rgba(255,255,255,0.08); position: relative;
         }
+        .modal-close {
+            position: absolute; top: 16px; right: 16px; background: rgba(255,255,255,0.08);
+            border: none; color: #9AA0A6; width: 32px; height: 32px; border-radius: 8px;
+            cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center;
+        }
+        .modal-close:hover { background: rgba(255,255,255,0.12); color: #E8EAED; }
+        .detail-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin: 16px 0; }
+        .detail-item { background: rgba(255,255,255,0.03); padding: 12px; border-radius: 8px; }
+        .detail-label { font-size: 11px; color: #9AA0A6; text-transform: uppercase; letter-spacing: 0.04em; }
+        .detail-value { font-size: 18px; font-weight: 600; margin-top: 2px; }
 
-        /* Responsive */
-        @media (max-width: 1200px) {
-            .data-table {
-                font-size: 13px;
-            }
-            .data-table td {
-                padding: 16px 10px;
-            }
+        /* Prediction form */
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; }
+        .form-group { margin-bottom: 12px; }
+        .form-group label { display: block; font-size: 12px; color: #9AA0A6; margin-bottom: 4px; font-weight: 500; }
+        .form-group input, .form-group select {
+            width: 100%; padding: 10px 12px; background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: #E8EAED;
+            font-size: 14px; font-family: 'Inter', sans-serif; outline: none;
+        }
+        .form-group input:focus, .form-group select:focus { border-color: #8AB4F8; }
+        .btn-primary {
+            padding: 10px 24px; background: #8AB4F8; color: #0F1419; border: none;
+            border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer;
+            font-family: 'Inter', sans-serif; transition: all 0.2s;
+        }
+        .btn-primary:hover { background: #A8C7FA; transform: translateY(-1px); }
+        .btn-secondary {
+            padding: 8px 20px; background: rgba(255,255,255,0.08); color: #E8EAED; border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 8px; font-weight: 500; font-size: 13px; cursor: pointer;
+            font-family: 'Inter', sans-serif; transition: all 0.2s;
+        }
+        .btn-secondary:hover { background: rgba(255,255,255,0.12); }
+
+        /* Result card */
+        .result-card {
+            background: rgba(138,180,248,0.05); border: 1px solid rgba(138,180,248,0.15);
+            border-radius: 12px; padding: 24px; margin-top: 20px;
+        }
+        .result-card h3 { color: #8AB4F8; margin-bottom: 12px; }
+
+        /* Rec list */
+        .rec-list { list-style: none; padding: 0; }
+        .rec-list li { padding: 8px 12px; background: rgba(255,255,255,0.03); border-radius: 6px; margin-bottom: 6px; font-size: 13px; display: flex; align-items: center; gap: 8px; }
+        .rec-list li::before { content: '→'; color: #8AB4F8; font-weight: 700; }
+
+        /* Segment summary cards */
+        .seg-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; margin-bottom: 24px; }
+        .seg-card { padding: 20px; border-radius: 14px; border: 1px solid; }
+        .seg-card h4 { font-size: 16px; font-weight: 600; margin-bottom: 8px; }
+        .seg-stat { display: flex; justify-content: space-between; padding: 4px 0; font-size: 13px; }
+        .seg-stat .label { color: #9AA0A6; }
+
+        /* Model comparison table */
+        .model-table { width: 100%; border-collapse: collapse; }
+        .model-table th { text-align: left; padding: 10px; font-size: 11px; color: #9AA0A6; text-transform: uppercase; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .model-table td { padding: 10px; font-size: 13px; border-bottom: 1px solid rgba(255,255,255,0.04); }
+        .model-table tr.best { background: rgba(138,180,248,0.05); }
+        .model-table .metric { font-family: 'Monaco', monospace; font-weight: 500; }
+
+        /* Loading */
+        .loading { text-align: center; padding: 60px 20px; color: #9AA0A6; }
+        .spinner { width: 32px; height: 32px; border: 3px solid rgba(255,255,255,0.1); border-top-color: #8AB4F8; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 12px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Bar for segment distribution */
+        .seg-bar { display: flex; height: 8px; border-radius: 4px; overflow: hidden; margin: 8px 0; }
+        .seg-bar-part { height: 100%; }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 3px; }
+
+        .text-positive { color: #4CAF50; }
+        .text-negative { color: #F44336; }
+
+        @media (max-width: 768px) {
+            .charts-grid { grid-template-columns: 1fr; }
+            .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+            .header h1 { font-size: 28px; }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <!-- Header -->
         <div class="header">
-            <h1>Customer Sales Intelligence</h1>
-            <p class="subtitle">Predictive analytics powered by Gradient Boosting <code>(R² = 52%)</code></p>
+            <h1>Customer Revenue Intelligence</h1>
+            <p class="subtitle">Predictive analytics powered by Three-Stage XGBoost <code id="headerR2">R² = ...</code> · <span id="headerCustomerCount">...</span> customers</p>
         </div>
 
-        <!-- Header Icons -->
-        <div class="header-icons">
-            <div class="header-icon" title="Pin">📌</div>
-            <div class="header-icon" title="Screenshot">📸</div>
-            <div class="header-icon" title="Record">🎥</div>
-            <div class="header-icon" title="Share">📤</div>
-            <div class="header-icon" title="Settings">⚙️</div>
-        </div>
-
-        <!-- Tabs -->
         <div class="tabs">
-            <button class="tab">Overview</button>
-            <button class="tab active">Customers</button>
-            <button class="tab">Analytics</button>
-            <button class="tab">Model</button>
+            <button class="tab active" data-page="overview">Overview</button>
+            <button class="tab" data-page="customers">Customers</button>
+            <button class="tab" data-page="analytics">Analytics</button>
+            <button class="tab" data-page="model">Model</button>
         </div>
 
-        <!-- Table Section -->
-        <div class="table-section">
-            <div class="table-header">
-                <h2>Customer Database</h2>
-                <p class="subtitle">Click any row for detailed view - Sort by column headers</p>
+        <!-- ═══════════ OVERVIEW PAGE ═══════════ -->
+        <div class="page active" id="page-overview">
+            <div class="kpi-grid" id="kpiGrid"></div>
+            <div class="seg-grid" id="segGrid"></div>
+            <div class="charts-grid">
+                <div class="chart-card">
+                    <h3>Monthly Revenue Trend</h3>
+                    <p class="chart-sub">Dec 2009 — Dec 2011 · Calibration vs Holdout</p>
+                    <div class="chart-container"><canvas id="chartMonthly"></canvas></div>
+                </div>
+                <div class="chart-card">
+                    <h3>Segment Revenue Distribution</h3>
+                    <p class="chart-sub">Share of predicted 6-month revenue by segment</p>
+                    <div class="chart-container"><canvas id="chartSegPie"></canvas></div>
+                </div>
+            </div>
+            <div class="charts-grid">
+                <div class="chart-card">
+                    <h3>Revenue by Country</h3>
+                    <p class="chart-sub">Top markets by total revenue</p>
+                    <div class="chart-container"><canvas id="chartCountry"></canvas></div>
+                </div>
+                <div class="chart-card">
+                    <h3>Top Products</h3>
+                    <p class="chart-sub">Best-selling products by revenue</p>
+                    <div class="chart-container"><canvas id="chartProducts"></canvas></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════════ CUSTOMERS PAGE ═══════════ -->
+        <div class="page" id="page-customers">
+            <div class="table-section">
+                <div class="table-header">
+                    <h2>Customer Database</h2>
+                    <p class="subtitle">Click any row for detailed view · <span id="custCount">0</span> customers</p>
+                </div>
+                <div class="controls-row">
+                    <div class="search-box">
+                        <span class="search-icon">🔍</span>
+                        <input type="text" id="searchInput" placeholder="Search by customer ID...">
+                    </div>
+                    <button class="filter-btn active" data-filter="all">All</button>
+                    <button class="filter-btn" data-filter="vip">VIP</button>
+                    <button class="filter-btn" data-filter="high-value">High Value</button>
+                    <button class="filter-btn" data-filter="growth">Growth</button>
+                    <button class="filter-btn" data-filter="at-risk">At Risk</button>
+                </div>
+                <table class="data-table" id="customerTable">
+                    <thead>
+                        <tr>
+                            <th class="sortable" data-sort="id">ID</th>
+                            <th class="sortable" data-sort="segment">Segment</th>
+                            <th class="sortable" data-sort="totalSpend">Total Spend</th>
+                            <th class="sortable" data-sort="predicted">Predicted (6m)</th>
+                            <th class="sortable" data-sort="trend">Trend</th>
+                            <th class="sortable" data-sort="orders">Orders</th>
+                            <th class="sortable" data-sort="recency">Last Purchase</th>
+                            <th class="sortable" data-sort="avgOrder">Avg Order</th>
+                            <th class="sortable" data-sort="healthScore">Health</th>
+                        </tr>
+                    </thead>
+                    <tbody id="customerTableBody"></tbody>
+                </table>
+                <div class="pagination" id="pagination"></div>
+                <div class="loading" id="loadingState"><div class="spinner"></div><p>Loading customers...</p></div>
+            </div>
+        </div>
+
+        <!-- ═══════════ ANALYTICS PAGE ═══════════ -->
+        <div class="page" id="page-analytics">
+            <div class="charts-grid">
+                <div class="chart-card">
+                    <h3>Feature Importance</h3>
+                    <p class="chart-sub">What drives predictions — XGBoost feature weights</p>
+                    <div class="chart-container"><canvas id="chartFeatureImp"></canvas></div>
+                </div>
+                <div class="chart-card">
+                    <h3>Feature Correlation with Revenue</h3>
+                    <p class="chart-sub">Pearson correlation (absolute) with holdout spend</p>
+                    <div class="chart-container"><canvas id="chartFeatureCorr"></canvas></div>
+                </div>
+            </div>
+            <div class="charts-grid">
+                <div class="chart-card">
+                    <h3>Revenue Capture Curve</h3>
+                    <p class="chart-sub">% of total revenue captured by targeting top N% of customers</p>
+                    <div class="chart-container"><canvas id="chartCapture"></canvas></div>
+                </div>
+                <div class="chart-card">
+                    <h3>Customer Segment Distribution</h3>
+                    <p class="chart-sub">Count and average predicted spend by segment</p>
+                    <div class="chart-container"><canvas id="chartSegDist"></canvas></div>
+                </div>
+            </div>
+            <div class="card" style="margin-top: 20px;">
+                <h3 style="margin-bottom: 12px;">Data Quality Summary</h3>
+                <p class="chart-sub">Cleaning decisions applied to the raw dataset</p>
+                <div id="cleaningSummary"></div>
+            </div>
+        </div>
+
+        <!-- ═══════════ MODEL PAGE ═══════════ -->
+        <div class="page" id="page-model">
+            <div class="charts-grid">
+                <div class="card" style="grid-column: 1 / -1;">
+                    <h3 style="margin-bottom: 4px;">Model Performance Comparison</h3>
+                    <p class="chart-sub" style="margin-bottom: 16px;">All 13 models evaluated on the holdout set (Dec 2010 – May 2011)</p>
+                    <div style="overflow-x: auto;">
+                        <table class="model-table" id="modelTable">
+                            <thead><tr><th>Model</th><th>RMSE (£)</th><th>MAE (£)</th><th>R²</th><th>MedAE (£)</th><th>Rating</th></tr></thead>
+                            <tbody id="modelTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="charts-grid">
+                <div class="chart-card">
+                    <h3>RMSE Comparison</h3>
+                    <p class="chart-sub">Lower is better — error in £ per customer</p>
+                    <div class="chart-container"><canvas id="chartRMSE"></canvas></div>
+                </div>
+                <div class="chart-card">
+                    <h3>R² Score Comparison</h3>
+                    <p class="chart-sub">Higher is better — variance explained</p>
+                    <div class="chart-container"><canvas id="chartR2"></canvas></div>
+                </div>
             </div>
 
-            <!-- Search -->
-            <div class="search-box">
-                <span class="search-icon">🔍</span>
-                <input type="text" id="searchInput" placeholder="Search customers by ID, segment, or value...">
-            </div>
-
-            <!-- Filters -->
-            <div class="filters">
-                <button class="filter-btn active" data-filter="all">All Customers</button>
-                <button class="filter-btn" data-filter="vip">VIP</button>
-                <button class="filter-btn" data-filter="high-value">High Value</button>
-                <button class="filter-btn" data-filter="growth">Growth</button>
-                <button class="filter-btn" data-filter="at-risk">At Risk</button>
-            </div>
-
-            <!-- Data Table -->
-            <table class="data-table" id="customerTable">
-                <thead>
-                    <tr>
-                        <th class="sortable" data-sort="id">ID</th>
-                        <th class="sortable" data-sort="segment">Segment</th>
-                        <th class="sortable" data-sort="totalSpend">Total Spend</th>
-                        <th class="sortable" data-sort="predicted">Predicted ↓</th>
-                        <th class="sortable" data-sort="trend">Trend</th>
-                        <th class="sortable" data-sort="orders">Orders</th>
-                        <th class="sortable" data-sort="lastPurchase">Last Purchase</th>
-                        <th class="sortable" data-sort="avgOrder">Avg Order</th>
-                    </tr>
-                </thead>
-                <tbody id="customerTableBody">
-                    <!-- Data will be inserted here -->
-                </tbody>
-            </table>
-
-            <!-- Loading State -->
-            <div class="loading" id="loadingState">
-                <div class="loading-spinner"></div>
-                <p>Loading customer data...</p>
+            <!-- Prediction Tool -->
+            <div class="card" style="margin-top: 24px;">
+                <h3 style="margin-bottom: 4px;">Revenue Prediction Tool</h3>
+                <p class="chart-sub" style="margin-bottom: 16px;">Enter customer metrics to get a 6-month revenue prediction using the Three-Stage XGBoost model</p>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Total Orders (Frequency)</label>
+                        <input type="number" id="predFreq" value="5" min="1">
+                    </div>
+                    <div class="form-group">
+                        <label>Total Lifetime Spend (£)</label>
+                        <input type="number" id="predMonetary" value="2000" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label>Days Since Last Purchase</label>
+                        <input type="number" id="predRecency" value="30" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label>Customer Tenure (Days)</label>
+                        <input type="number" id="predTenure" value="180" min="1">
+                    </div>
+                    <div class="form-group">
+                        <label>Revenue Last 30 Days (£)</label>
+                        <input type="number" id="predRev30" value="500" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label>Revenue Last 90 Days (£)</label>
+                        <input type="number" id="predRev90" value="1200" min="0">
+                    </div>
+                </div>
+                <div style="margin-top: 16px;">
+                    <button class="btn-primary" onclick="runPrediction()">Predict Revenue</button>
+                </div>
+                <div id="predictionResult"></div>
             </div>
         </div>
     </div>
 
+    <!-- Customer Detail Modal -->
+    <div class="modal-overlay" id="customerModal">
+        <div class="modal">
+            <button class="modal-close" onclick="closeModal()">✕</button>
+            <div id="modalContent"><div class="loading"><div class="spinner"></div><p>Loading...</p></div></div>
+        </div>
+    </div>
+
     <script>
-        // Sample customer data (replace with API call)
-        const customers = [
-            { id: 14646, segment: 'vip', totalSpend: 384000, predicted: 47000, trend: -14000, orders: 110, lastPurchase: '3d', avgOrder: 137 },
-            { id: 15939, segment: 'high-value', totalSpend: 8200, predicted: 4400, trend: 1100, orders: 11, lastPurchase: '19d', avgOrder: 56 },
-            { id: 14936, segment: 'high-value', totalSpend: 7900, predicted: 3000, trend: 484, orders: 6, lastPurchase: '14d', avgOrder: 24 },
-            { id: 12714, segment: 'high-value', totalSpend: 12000, predicted: 2100, trend: 339, orders: 10, lastPurchase: '18d', avgOrder: 21 },
-            { id: 18225, segment: 'high-value', totalSpend: 9200, predicted: 2100, trend: -464, orders: 19, lastPurchase: '43d', avgOrder: 23 },
-            { id: 13115, segment: 'growth', totalSpend: 4100, predicted: 1400, trend: 879, orders: 7, lastPurchase: '23d', avgOrder: 16 },
-            { id: 17838, segment: 'growth', totalSpend: 5600, predicted: 1300, trend: -752, orders: 11, lastPurchase: '131d', avgOrder: 21 },
-            { id: 12782, segment: 'growth', totalSpend: 3900, predicted: 1300, trend: -1100, orders: 9, lastPurchase: '92d', avgOrder: 20 },
-            { id: 14934, segment: 'growth', totalSpend: 2400, predicted: 1200, trend: -829, orders: 4, lastPurchase: '121d', avgOrder: 18 },
-            { id: 16241, segment: 'growth', totalSpend: 2700, predicted: 879, trend: 409, orders: 8, lastPurchase: '16d', avgOrder: 5 },
-        ];
+    // ═══════════════════════════════════════════════════════════════
+    // GLOBALS
+    // ═══════════════════════════════════════════════════════════════
+    const API = '';
+    let currentPage = 'overview';
+    let customerFilter = 'all';
+    let customerSort = 'pred_3stage';
+    let customerSortDir = 'desc';
+    let customerOffset = 0;
+    const PAGE_SIZE = 50;
+    let searchTimeout = null;
+    const chartInstances = {};
 
-        let currentFilter = 'all';
-        let sortColumn = 'predicted';
-        let sortDirection = 'desc';
+    const fmt = (v) => {
+        if (v == null || isNaN(v)) return '£0';
+        if (Math.abs(v) >= 1000000) return `£${(v/1000000).toFixed(1)}M`;
+        if (Math.abs(v) >= 1000) return `£${(v/1000).toFixed(1)}K`;
+        return `£${Math.round(v)}`;
+    };
+    const fmtN = (v) => v?.toLocaleString() ?? '0';
+    const pct = (v) => `${(v*100).toFixed(1)}%`;
 
-        // Format currency
-        const formatCurrency = (value) => {
-            if (value >= 1000000) return `£${(value / 1000).toFixed(0)}K`;
-            if (value >= 1000) return `£${(value / 1000).toFixed(1)}K`;
-            return `£${value}`;
+    const COLORS = {
+        VIP: '#FFC107', 'High Value': '#4CAF50', Growth: '#2196F3', 'At Risk': '#F44336',
+        primary: '#8AB4F8', secondary: '#FFA726', bg: 'rgba(138,180,248,0.1)',
+    };
+
+    function chartDefaults() {
+        Chart.defaults.color = '#9AA0A6';
+        Chart.defaults.borderColor = 'rgba(255,255,255,0.06)';
+        Chart.defaults.font.family = "'Inter', sans-serif";
+        Chart.defaults.font.size = 11;
+    }
+    chartDefaults();
+
+    function destroyChart(id) { if (chartInstances[id]) { chartInstances[id].destroy(); delete chartInstances[id]; } }
+
+    // ═══════════════════════════════════════════════════════════════
+    // NAVIGATION
+    // ═══════════════════════════════════════════════════════════════
+    document.querySelectorAll('.tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            tab.classList.add('active');
+            const page = tab.dataset.page;
+            document.getElementById(`page-${page}`).classList.add('active');
+            currentPage = page;
+            loadPage(page);
+        });
+    });
+
+    async function loadPage(page) {
+        switch(page) {
+            case 'overview': await loadOverview(); break;
+            case 'customers': await loadCustomers(); break;
+            case 'analytics': await loadAnalytics(); break;
+            case 'model': await loadModel(); break;
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // OVERVIEW PAGE
+    // ═══════════════════════════════════════════════════════════════
+    async function loadOverview() {
+        const [kpis, segments, monthly, countries, products] = await Promise.all([
+            fetch(`${API}/api/analytics/kpis`).then(r => r.json()),
+            fetch(`${API}/api/segments`).then(r => r.json()),
+            fetch(`${API}/api/analytics/monthly-revenue`).then(r => r.json()),
+            fetch(`${API}/api/analytics/country-data`).then(r => r.json()),
+            fetch(`${API}/api/analytics/top-products`).then(r => r.json()),
+        ]);
+
+        document.getElementById('headerR2').textContent = `R² = ${kpis.modelR2}%`;
+        document.getElementById('headerCustomerCount').textContent = fmtN(kpis.totalCustomers);
+
+        // KPIs
+        document.getElementById('kpiGrid').innerHTML = [
+            kpiCard('Total Customers', fmtN(kpis.totalCustomers), `${kpis.activeBuyerPct}% active buyers`),
+            kpiCard('Predicted Revenue', fmt(kpis.totalPredictedRevenue), `6-month forecast`),
+            kpiCard('Avg Predicted Spend', fmt(kpis.avgPredictedSpend), `Median: ${fmt(kpis.medianPrediction)}`),
+            kpiCard('Model Accuracy', `${kpis.modelR2}%`, `Best: ${kpis.bestModel.split('(')[0].trim()}`),
+            kpiCard('VIP Customers', fmtN(kpis.vipCount), `${(kpis.vipCount/kpis.totalCustomers*100).toFixed(1)}% of base`),
+            kpiCard('At-Risk Customers', fmtN(kpis.atRiskCount), `Need reactivation`, true),
+        ].join('');
+
+        // Segments
+        const segOrder = ['VIP', 'High Value', 'Growth', 'At Risk'];
+        const segClasses = { VIP: 'bg-vip seg-vip', 'High Value': 'bg-high seg-high', Growth: 'bg-growth seg-growth', 'At Risk': 'bg-risk seg-risk' };
+        document.getElementById('segGrid').innerHTML = segOrder.map(name => {
+            const s = segments.find(x => x.segment === name) || {};
+            return `<div class="seg-card ${segClasses[name]}">
+                <h4>${name}</h4>
+                <div class="seg-stat"><span class="label">Customers</span><span>${fmtN(s.count)}</span></div>
+                <div class="seg-stat"><span class="label">Avg Predicted</span><span>${fmt(s.avgPredicted)}</span></div>
+                <div class="seg-stat"><span class="label">Revenue Share</span><span>${s.percentOfRevenue}%</span></div>
+                <div class="seg-stat"><span class="label">Avg Recency</span><span>${s.avgRecency}d</span></div>
+                <div class="seg-stat"><span class="label">Avg Frequency</span><span>${s.avgFrequency} orders</span></div>
+            </div>`;
+        }).join('');
+
+        // Monthly chart
+        destroyChart('chartMonthly');
+        const ctx1 = document.getElementById('chartMonthly').getContext('2d');
+        const splitIdx = monthly.findIndex(m => m.InvoiceDate === '2010-12');
+        chartInstances.chartMonthly = new Chart(ctx1, {
+            type: 'bar',
+            data: {
+                labels: monthly.map(m => m.InvoiceDate),
+                datasets: [{
+                    label: 'Revenue',
+                    data: monthly.map(m => m.revenue),
+                    backgroundColor: monthly.map((m, i) => i < splitIdx ? 'rgba(138,180,248,0.6)' : 'rgba(255,167,38,0.6)'),
+                    borderColor: monthly.map((m, i) => i < splitIdx ? '#8AB4F8' : '#FFA726'),
+                    borderWidth: 1, borderRadius: 3,
+                }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: { callbacks: { label: c => fmt(c.raw) } },
+                    annotation: splitIdx >= 0 ? {} : undefined,
+                },
+                scales: {
+                    y: { ticks: { callback: v => fmt(v) }, grid: { color: 'rgba(255,255,255,0.04)' } },
+                    x: { ticks: { maxRotation: 45, font: { size: 10 } }, grid: { display: false } },
+                }
+            }
+        });
+
+        // Segment pie
+        destroyChart('chartSegPie');
+        const ctx2 = document.getElementById('chartSegPie').getContext('2d');
+        chartInstances.chartSegPie = new Chart(ctx2, {
+            type: 'doughnut',
+            data: {
+                labels: segOrder,
+                datasets: [{ data: segOrder.map(n => segments.find(s => s.segment === n)?.totalPredicted || 0),
+                    backgroundColor: segOrder.map(n => COLORS[n]), borderWidth: 0 }],
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false, cutout: '55%',
+                plugins: { tooltip: { callbacks: { label: c => `${c.label}: ${fmt(c.raw)} (${((c.raw/segments.reduce((a,s)=>a+s.totalPredicted,0))*100).toFixed(1)}%)` } },
+                    legend: { position: 'right', labels: { padding: 16, usePointStyle: true, pointStyle: 'circle' } } },
+            }
+        });
+
+        // Country chart
+        destroyChart('chartCountry');
+        const ctx3 = document.getElementById('chartCountry').getContext('2d');
+        chartInstances.chartCountry = new Chart(ctx3, {
+            type: 'bar',
+            data: {
+                labels: countries.slice(0, 10).map(c => c.country.length > 15 ? c.country.slice(0, 14) + '…' : c.country),
+                datasets: [{ data: countries.slice(0, 10).map(c => c.revenue),
+                    backgroundColor: 'rgba(138,180,248,0.5)', borderColor: '#8AB4F8', borderWidth: 1, borderRadius: 3 }],
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false, indexAxis: 'y',
+                plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => fmt(c.raw) } } },
+                scales: { x: { ticks: { callback: v => fmt(v) }, grid: { color: 'rgba(255,255,255,0.04)' } }, y: { grid: { display: false } } },
+            }
+        });
+
+        // Products chart
+        destroyChart('chartProducts');
+        const ctx4 = document.getElementById('chartProducts').getContext('2d');
+        chartInstances.chartProducts = new Chart(ctx4, {
+            type: 'bar',
+            data: {
+                labels: products.slice(0, 8).map(p => p.product.length > 20 ? p.product.slice(0, 19) + '…' : p.product),
+                datasets: [{ data: products.slice(0, 8).map(p => p.revenue),
+                    backgroundColor: 'rgba(255,167,38,0.5)', borderColor: '#FFA726', borderWidth: 1, borderRadius: 3 }],
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false, indexAxis: 'y',
+                plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => fmt(c.raw) } } },
+                scales: { x: { ticks: { callback: v => fmt(v) }, grid: { color: 'rgba(255,255,255,0.04)' } }, y: { ticks: { font: { size: 10 } }, grid: { display: false } } },
+            }
+        });
+    }
+
+    function kpiCard(title, value, sub, warn=false) {
+        return `<div class="card"><div class="card-title">${title}</div><div class="card-value" style="${warn?'color:#F44336':''}">${value}</div><div class="card-sub">${sub}</div></div>`;
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // CUSTOMERS PAGE
+    // ═══════════════════════════════════════════════════════════════
+    async function loadCustomers() {
+        const loading = document.getElementById('loadingState');
+        loading.style.display = 'block';
+        const search = document.getElementById('searchInput').value;
+        const sortMap = { id: 'monetary_total', segment: 'segment', totalSpend: 'monetary_total', predicted: 'pred_3stage',
+            trend: 'revenue_growth_rate', orders: 'frequency', recency: 'recency', avgOrder: 'aov', healthScore: 'health_score' };
+        const sort = sortMap[customerSort] || 'pred_3stage';
+        const url = `${API}/api/customers?segment=${customerFilter}&sort_by=${sort}&sort_dir=${customerSortDir}&limit=${PAGE_SIZE}&offset=${customerOffset}&search=${encodeURIComponent(search)}`;
+        const data = await fetch(url).then(r => r.json());
+
+        document.getElementById('custCount').textContent = fmtN(data.total);
+        const tbody = document.getElementById('customerTableBody');
+
+        tbody.innerHTML = data.customers.map(c => {
+            const sc = c.segment.toLowerCase().replace(/\s+/g, '-');
+            const trendCls = c.trend >= 0 ? 'positive' : 'negative';
+            const arrow = c.trend >= 0 ? '↗' : '↘';
+            const gradeColor = { A: '#4CAF50', B: '#8AB4F8', C: '#FFA726', D: '#F44336', F: '#9AA0A6' }[c.healthGrade] || '#9AA0A6';
+            return `<tr onclick="viewCustomer(${c.id})">
+                <td class="value-muted">#${c.id}</td>
+                <td><span class="segment-badge ${sc}"><span class="segment-dot"></span>${c.segment}</span></td>
+                <td class="value-large">${fmt(c.totalSpend)}</td>
+                <td class="value-predicted">${fmt(c.predicted)}</td>
+                <td><span class="value-trend ${trendCls}">${arrow} ${fmt(Math.abs(c.trend))}</span></td>
+                <td>${c.orders}</td>
+                <td>${c.lastPurchase}</td>
+                <td class="value-muted">${fmt(c.avgOrder)}</td>
+                <td><span style="color:${gradeColor};font-weight:600">${c.healthGrade}</span> <span class="value-muted">${c.healthScore}</span></td>
+            </tr>`;
+        }).join('');
+
+        loading.style.display = 'none';
+
+        // Pagination
+        const totalPages = Math.ceil(data.total / PAGE_SIZE);
+        const currentPageNum = Math.floor(customerOffset / PAGE_SIZE) + 1;
+        const pag = document.getElementById('pagination');
+        let pagHTML = `<button class="page-btn" onclick="goPage(0)" ${customerOffset===0?'disabled':''}>«</button>`;
+        pagHTML += `<button class="page-btn" onclick="goPage(${customerOffset - PAGE_SIZE})" ${customerOffset===0?'disabled':''}>‹</button>`;
+        pagHTML += `<span class="page-info">Page ${currentPageNum} of ${totalPages}</span>`;
+        pagHTML += `<button class="page-btn" onclick="goPage(${customerOffset + PAGE_SIZE})" ${currentPageNum>=totalPages?'disabled':''}>›</button>`;
+        pagHTML += `<button class="page-btn" onclick="goPage(${(totalPages-1)*PAGE_SIZE})" ${currentPageNum>=totalPages?'disabled':''}>»</button>`;
+        pag.innerHTML = pagHTML;
+    }
+
+    function goPage(offset) { customerOffset = Math.max(0, offset); loadCustomers(); }
+
+    // Filters
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            customerFilter = this.dataset.filter;
+            customerOffset = 0;
+            loadCustomers();
+        });
+    });
+
+    // Sort
+    document.querySelectorAll('#customerTable .sortable').forEach(th => {
+        th.addEventListener('click', function() {
+            const col = this.dataset.sort;
+            if (customerSort === col) { customerSortDir = customerSortDir === 'desc' ? 'asc' : 'desc'; }
+            else { customerSort = col; customerSortDir = 'desc'; }
+            document.querySelectorAll('#customerTable .sortable').forEach(t => t.textContent = t.textContent.replace(/ [↑↓]/g, ''));
+            this.textContent += customerSortDir === 'desc' ? ' ↓' : ' ↑';
+            loadCustomers();
+        });
+    });
+
+    // Search
+    document.getElementById('searchInput').addEventListener('input', function() {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => { customerOffset = 0; loadCustomers(); }, 300);
+    });
+
+    // ═══════════════════════════════════════════════════════════════
+    // CUSTOMER DETAIL MODAL
+    // ═══════════════════════════════════════════════════════════════
+    async function viewCustomer(id) {
+        document.getElementById('customerModal').classList.add('active');
+        document.getElementById('modalContent').innerHTML = `<div class="loading"><div class="spinner"></div><p>Loading customer #${id}...</p></div>`;
+
+        const c = await fetch(`${API}/api/customers/${id}`).then(r => r.json());
+        const sc = c.segment.toLowerCase().replace(/\s+/g, '-');
+        const gradeColor = { A: '#4CAF50', B: '#8AB4F8', C: '#FFA726', D: '#F44336', F: '#9AA0A6' }[c.healthGrade] || '#9AA0A6';
+
+        document.getElementById('modalContent').innerHTML = `
+            <div style="display:flex;align-items:center;gap:16px;margin-bottom:20px">
+                <div>
+                    <h2 style="font-size:24px">Customer #${c.id}</h2>
+                    <span class="segment-badge ${sc}" style="margin-top:4px"><span class="segment-dot"></span>${c.segment}</span>
+                </div>
+                <div style="margin-left:auto;text-align:right">
+                    <div style="font-size:12px;color:#9AA0A6">Health Score</div>
+                    <div style="font-size:28px;font-weight:700;color:${gradeColor}">${c.healthGrade} <span style="font-size:16px;color:#9AA0A6">${c.healthScore}</span></div>
+                </div>
+            </div>
+            <div class="detail-grid">
+                <div class="detail-item"><div class="detail-label">Total Spend</div><div class="detail-value">${fmt(c.totalSpend)}</div></div>
+                <div class="detail-item"><div class="detail-label">Predicted (6m)</div><div class="detail-value" style="color:#FFA726">${fmt(c.predicted)}</div></div>
+                <div class="detail-item"><div class="detail-label">Actual Holdout</div><div class="detail-value">${fmt(c.actualHoldout)}</div></div>
+                <div class="detail-item"><div class="detail-label">Purchase Prob.</div><div class="detail-value">${(c.pBuy*100).toFixed(0)}%</div></div>
+                <div class="detail-item"><div class="detail-label">Orders</div><div class="detail-value">${c.orders}</div></div>
+                <div class="detail-item"><div class="detail-label">Avg Order</div><div class="detail-value">${fmt(c.avgOrder)}</div></div>
+                <div class="detail-item"><div class="detail-label">Last Purchase</div><div class="detail-value">${c.lastPurchase} ago</div></div>
+                <div class="detail-item"><div class="detail-label">Recency</div><div class="detail-value">${c.recency} days</div></div>
+            </div>
+            <h3 style="margin:16px 0 8px;font-size:15px">Revenue Windows</h3>
+            <div style="height:180px"><canvas id="modalRevChart"></canvas></div>
+            <h3 style="margin:16px 0 8px;font-size:15px">Key Features</h3>
+            <div class="detail-grid" style="grid-template-columns:repeat(auto-fit,minmax(140px,1fr))">
+                ${Object.entries(c.features).filter(([k]) => ['rev_30d','rev_90d','rev_180d','revenue_growth_rate','freq_rate','q4_frac','return_rate','order_cv','cancel_count','maturity'].includes(k))
+                    .map(([k,v]) => `<div class="detail-item"><div class="detail-label">${k.replace(/_/g,' ')}</div><div class="detail-value" style="font-size:14px">${typeof v === 'number' && k.includes('rev') ? fmt(v) : v}</div></div>`).join('')}
+            </div>
+            <h3 style="margin:16px 0 8px;font-size:15px">Recommendations</h3>
+            <ul class="rec-list">${c.recommendations.map(r => `<li>${r}</li>`).join('')}</ul>
+        `;
+
+        // Revenue windows chart
+        const rw = c.revenueWindows;
+        const mCtx = document.getElementById('modalRevChart').getContext('2d');
+        new Chart(mCtx, {
+            type: 'bar',
+            data: {
+                labels: Object.keys(rw),
+                datasets: [{ data: Object.values(rw), backgroundColor: 'rgba(138,180,248,0.5)', borderColor: '#8AB4F8', borderWidth: 1, borderRadius: 4 }],
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => fmt(c.raw) } } },
+                scales: { y: { ticks: { callback: v => fmt(v) }, grid: { color: 'rgba(255,255,255,0.04)' } }, x: { grid: { display: false } } },
+            }
+        });
+    }
+
+    function closeModal() { document.getElementById('customerModal').classList.remove('active'); }
+    document.getElementById('customerModal').addEventListener('click', e => { if (e.target === e.currentTarget) closeModal(); });
+
+    // ═══════════════════════════════════════════════════════════════
+    // ANALYTICS PAGE
+    // ═══════════════════════════════════════════════════════════════
+    async function loadAnalytics() {
+        const [fi, fc, capture, segments, cleaning] = await Promise.all([
+            fetch(`${API}/api/analytics/feature-importance`).then(r => r.json()),
+            fetch(`${API}/api/analytics/feature-correlations`).then(r => r.json()),
+            fetch(`${API}/api/analytics/revenue-capture`).then(r => r.json()),
+            fetch(`${API}/api/segments`).then(r => r.json()),
+            fetch(`${API}/api/analytics/cleaning-summary`).then(r => r.json()),
+        ]);
+
+        // Feature importance
+        destroyChart('chartFeatureImp');
+        const ctx1 = document.getElementById('chartFeatureImp').getContext('2d');
+        chartInstances.chartFeatureImp = new Chart(ctx1, {
+            type: 'bar',
+            data: {
+                labels: fi.map(f => f.feature.replace(/_/g, ' ')),
+                datasets: [{ data: fi.map(f => f.importance), backgroundColor: 'rgba(138,180,248,0.5)', borderColor: '#8AB4F8', borderWidth: 1, borderRadius: 3 }],
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false, indexAxis: 'y',
+                plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => c.raw.toFixed(4) } } },
+                scales: { x: { grid: { color: 'rgba(255,255,255,0.04)' } }, y: { ticks: { font: { size: 10 } }, grid: { display: false } } },
+            }
+        });
+
+        // Feature correlations
+        destroyChart('chartFeatureCorr');
+        const ctx2 = document.getElementById('chartFeatureCorr').getContext('2d');
+        chartInstances.chartFeatureCorr = new Chart(ctx2, {
+            type: 'bar',
+            data: {
+                labels: fc.map(f => f.feature.replace(/_/g, ' ')),
+                datasets: [{ data: fc.map(f => f.correlation),
+                    backgroundColor: fc.map(f => f.correlation > 0.3 ? 'rgba(76,175,80,0.5)' : f.correlation > 0.15 ? 'rgba(255,167,38,0.5)' : 'rgba(138,180,248,0.3)'),
+                    borderColor: fc.map(f => f.correlation > 0.3 ? '#4CAF50' : f.correlation > 0.15 ? '#FFA726' : '#8AB4F8'),
+                    borderWidth: 1, borderRadius: 3 }],
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false, indexAxis: 'y',
+                plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => `|r| = ${c.raw.toFixed(3)}` } } },
+                scales: { x: { grid: { color: 'rgba(255,255,255,0.04)' } }, y: { ticks: { font: { size: 10 } }, grid: { display: false } } },
+            }
+        });
+
+        // Revenue capture
+        destroyChart('chartCapture');
+        const ctx3 = document.getElementById('chartCapture').getContext('2d');
+        const capModels = Object.keys(capture).filter(k => k !== 'percentiles');
+        const capColors = ['#8AB4F8', '#FFA726', '#4CAF50', '#F44336', '#9C27B0'];
+        chartInstances.chartCapture = new Chart(ctx3, {
+            type: 'line',
+            data: {
+                labels: capture.percentiles.map(p => `${p}%`),
+                datasets: [
+                    ...capModels.map((m, i) => ({
+                        label: m, data: capture[m].map(v => v * 100),
+                        borderColor: capColors[i], backgroundColor: 'transparent',
+                        borderWidth: 2, pointRadius: 0, tension: 0.3,
+                    })),
+                    { label: 'Random', data: capture.percentiles, borderColor: '#555', borderDash: [5, 5],
+                      backgroundColor: 'transparent', borderWidth: 1, pointRadius: 0 },
+                ]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: { legend: { position: 'bottom', labels: { padding: 12, usePointStyle: true, pointStyle: 'line' } },
+                    tooltip: { callbacks: { label: c => `${c.dataset.label}: ${c.raw.toFixed(1)}%` } } },
+                scales: {
+                    y: { ticks: { callback: v => `${v}%` }, grid: { color: 'rgba(255,255,255,0.04)' }, title: { display: true, text: '% Revenue Captured', color: '#9AA0A6' } },
+                    x: { grid: { color: 'rgba(255,255,255,0.04)' }, title: { display: true, text: '% Customers Targeted', color: '#9AA0A6' } },
+                }
+            }
+        });
+
+        // Segment distribution
+        destroyChart('chartSegDist');
+        const ctx4 = document.getElementById('chartSegDist').getContext('2d');
+        const segOrder = ['VIP', 'High Value', 'Growth', 'At Risk'];
+        chartInstances.chartSegDist = new Chart(ctx4, {
+            type: 'bar',
+            data: {
+                labels: segOrder,
+                datasets: [
+                    { label: 'Count', data: segOrder.map(n => segments.find(s => s.segment === n)?.count || 0),
+                      backgroundColor: segOrder.map(n => COLORS[n] + '88'), borderColor: segOrder.map(n => COLORS[n]), borderWidth: 1, borderRadius: 3, yAxisID: 'y' },
+                    { label: 'Avg Predicted', data: segOrder.map(n => segments.find(s => s.segment === n)?.avgPredicted || 0),
+                      type: 'line', borderColor: '#FFA726', backgroundColor: 'transparent', borderWidth: 2, pointRadius: 4, pointBackgroundColor: '#FFA726', yAxisID: 'y1' },
+                ]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: { legend: { position: 'bottom', labels: { padding: 12, usePointStyle: true } } },
+                scales: {
+                    y: { position: 'left', ticks: { color: '#9AA0A6' }, grid: { color: 'rgba(255,255,255,0.04)' }, title: { display: true, text: 'Count', color: '#9AA0A6' } },
+                    y1: { position: 'right', ticks: { callback: v => fmt(v), color: '#FFA726' }, grid: { display: false }, title: { display: true, text: 'Avg Predicted', color: '#FFA726' } },
+                    x: { grid: { display: false } },
+                }
+            }
+        });
+
+        // Cleaning summary
+        const cs = cleaning;
+        document.getElementById('cleaningSummary').innerHTML = `
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px;margin-top:12px">
+                ${Object.entries(cs).filter(([k]) => !['total_raw','total_clean','pct_retained'].includes(k)).map(([k, v]) =>
+                    `<div style="background:rgba(255,255,255,0.03);padding:12px;border-radius:8px">
+                        <div style="font-size:12px;color:#9AA0A6">${k}</div>
+                        <div style="font-size:18px;font-weight:600;margin:4px 0">${fmtN(v.rows)} rows <span style="color:#9AA0A6;font-size:12px">(${v.pct}%)</span></div>
+                    </div>`).join('')}
+            </div>
+            <div style="margin-top:12px;padding:12px;background:rgba(76,175,80,0.05);border:1px solid rgba(76,175,80,0.15);border-radius:8px">
+                <strong style="color:#4CAF50">Result:</strong> ${fmtN(cs.total_clean)} clean rows retained from ${fmtN(cs.total_raw)} raw (${cs.pct_retained}%)
+            </div>
+        `;
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // MODEL PAGE
+    // ═══════════════════════════════════════════════════════════════
+    async function loadModel() {
+        const models = await fetch(`${API}/api/analytics/model-comparison`).then(r => r.json());
+
+        const sorted = Object.entries(models).sort((a, b) => a[1].RMSE - b[1].RMSE);
+        const bestRMSE = sorted[0][0];
+
+        const tbody = document.getElementById('modelTableBody');
+        tbody.innerHTML = sorted.map(([name, m]) => {
+            const rating = m.R2 > 0.97 ? '★★★' : m.R2 > 0.90 ? '★★' : m.R2 > 0.70 ? '★' : '';
+            const isBest = name === bestRMSE;
+            return `<tr ${isBest ? 'class="best"' : ''}>
+                <td><strong>${name}</strong>${isBest ? ' <span style="color:#FFC107">← Best RMSE</span>' : ''}</td>
+                <td class="metric">${fmt(m.RMSE)}</td>
+                <td class="metric">${fmt(m.MAE)}</td>
+                <td class="metric">${(m.R2 * 100).toFixed(2)}%</td>
+                <td class="metric">${fmt(m.MedAE)}</td>
+                <td style="color:#FFC107">${rating}</td>
+            </tr>`;
+        }).join('');
+
+        // RMSE chart
+        destroyChart('chartRMSE');
+        const ctx1 = document.getElementById('chartRMSE').getContext('2d');
+        chartInstances.chartRMSE = new Chart(ctx1, {
+            type: 'bar',
+            data: {
+                labels: sorted.map(([n]) => n.length > 25 ? n.slice(0,24) + '…' : n),
+                datasets: [{ data: sorted.map(([,m]) => m.RMSE),
+                    backgroundColor: sorted.map(([n]) => n === bestRMSE ? 'rgba(255,193,7,0.5)' : 'rgba(138,180,248,0.4)'),
+                    borderColor: sorted.map(([n]) => n === bestRMSE ? '#FFC107' : '#8AB4F8'),
+                    borderWidth: 1, borderRadius: 3 }],
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false, indexAxis: 'y',
+                plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => `RMSE: ${fmt(c.raw)}` } } },
+                scales: { x: { ticks: { callback: v => fmt(v) }, grid: { color: 'rgba(255,255,255,0.04)' } }, y: { ticks: { font: { size: 9 } }, grid: { display: false } } },
+            }
+        });
+
+        // R2 chart
+        destroyChart('chartR2');
+        const ctx2 = document.getElementById('chartR2').getContext('2d');
+        const sortedR2 = [...sorted].sort((a, b) => b[1].R2 - a[1].R2);
+        chartInstances.chartR2 = new Chart(ctx2, {
+            type: 'bar',
+            data: {
+                labels: sortedR2.map(([n]) => n.length > 25 ? n.slice(0,24) + '…' : n),
+                datasets: [{ data: sortedR2.map(([,m]) => m.R2 * 100),
+                    backgroundColor: sortedR2.map(([,m]) => m.R2 > 0.97 ? 'rgba(76,175,80,0.5)' : m.R2 > 0.90 ? 'rgba(138,180,248,0.4)' : 'rgba(244,67,54,0.3)'),
+                    borderColor: sortedR2.map(([,m]) => m.R2 > 0.97 ? '#4CAF50' : m.R2 > 0.90 ? '#8AB4F8' : '#F44336'),
+                    borderWidth: 1, borderRadius: 3 }],
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false, indexAxis: 'y',
+                plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => `R²: ${c.raw.toFixed(2)}%` } } },
+                scales: { x: { ticks: { callback: v => `${v}%` }, grid: { color: 'rgba(255,255,255,0.04)' }, max: 100 }, y: { ticks: { font: { size: 9 } }, grid: { display: false } } },
+            }
+        });
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // PREDICTION TOOL
+    // ═══════════════════════════════════════════════════════════════
+    async function runPrediction() {
+        const body = {
+            frequency: +document.getElementById('predFreq').value,
+            monetary_total: +document.getElementById('predMonetary').value,
+            recency: +document.getElementById('predRecency').value,
+            tenure_days: +document.getElementById('predTenure').value,
+            rev_30d: +document.getElementById('predRev30').value,
+            rev_90d: +document.getElementById('predRev90').value,
         };
 
-        // Render table
-        function renderTable() {
-            const tbody = document.getElementById('customerTableBody');
-            const loading = document.getElementById('loadingState');
-            
-            // Filter customers
-            let filteredData = customers;
-            if (currentFilter !== 'all') {
-                filteredData = customers.filter(c => c.segment === currentFilter);
-            }
+        document.getElementById('predictionResult').innerHTML = `<div class="loading" style="padding:20px"><div class="spinner"></div></div>`;
 
-            // Sort customers
-            filteredData.sort((a, b) => {
-                let aVal = a[sortColumn];
-                let bVal = b[sortColumn];
-                
-                if (sortColumn === 'lastPurchase') {
-                    aVal = parseInt(a[sortColumn]);
-                    bVal = parseInt(b[sortColumn]);
-                }
-                
-                if (sortDirection === 'asc') {
-                    return aVal > bVal ? 1 : -1;
-                } else {
-                    return aVal < bVal ? 1 : -1;
-                }
-            });
+        try {
+            const res = await fetch(`${API}/api/predict`, {
+                method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body),
+            }).then(r => r.json());
 
-            // Build HTML
-            const html = filteredData.map(customer => {
-                const segmentClass = customer.segment.replace(' ', '-');
-                const segmentLabel = customer.segment.charAt(0).toUpperCase() + customer.segment.slice(1).replace('-', ' ');
-                const trendClass = customer.trend >= 0 ? 'positive' : 'negative';
-                const trendArrow = customer.trend >= 0 ? '↗' : '↘';
-                
-                return `
-                    <tr onclick="viewCustomer(${customer.id})">
-                        <td class="value-muted">#${customer.id}</td>
-                        <td>
-                            <span class="segment-badge ${segmentClass}">
-                                <span class="segment-dot"></span>
-                                ${segmentLabel}
-                            </span>
-                        </td>
-                        <td class="value-large">${formatCurrency(customer.totalSpend)}</td>
-                        <td class="value-predicted">${formatCurrency(customer.predicted)}</td>
-                        <td>
-                            <span class="value-trend ${trendClass}">
-                                <span class="arrow">${trendArrow}</span>
-                                ${formatCurrency(Math.abs(customer.trend))}
-                            </span>
-                        </td>
-                        <td>${customer.orders}${customer.orders > 100 ? '<span class="indicator-dot"></span>' : ''}</td>
-                        <td>${customer.lastPurchase}</td>
-                        <td class="value-muted">${formatCurrency(customer.avgOrder)}</td>
-                    </tr>
-                `;
-            }).join('');
-
-            tbody.innerHTML = html;
-            loading.style.display = 'none';
+            const sc = res.segment.toLowerCase().replace(/\s+/g, '-');
+            document.getElementById('predictionResult').innerHTML = `
+                <div class="result-card">
+                    <h3>Prediction Result</h3>
+                    <div class="detail-grid" style="margin-top:12px">
+                        <div class="detail-item"><div class="detail-label">Predicted 6-Month Revenue</div><div class="detail-value" style="color:#FFA726;font-size:28px">${fmt(res.predictedRevenue)}</div></div>
+                        <div class="detail-item"><div class="detail-label">Purchase Probability</div><div class="detail-value">${(res.purchaseProbability*100).toFixed(0)}%</div></div>
+                        <div class="detail-item"><div class="detail-label">Segment</div><div class="detail-value"><span class="segment-badge ${sc}"><span class="segment-dot"></span>${res.segment}</span></div></div>
+                        <div class="detail-item"><div class="detail-label">Value Tier</div><div class="detail-value">${res.tier}</div></div>
+                        <div class="detail-item"><div class="detail-label">Confidence</div><div class="detail-value">${res.confidence}</div></div>
+                    </div>
+                    <h4 style="margin-top:16px;font-size:14px;color:#9AA0A6">Recommendations</h4>
+                    <ul class="rec-list">${res.recommendations.map(r => `<li>${r}</li>`).join('')}</ul>
+                </div>
+            `;
+        } catch(err) {
+            document.getElementById('predictionResult').innerHTML = `<div class="result-card" style="border-color:rgba(244,67,54,0.3)"><p style="color:#F44336">Error: ${err.message}</p></div>`;
         }
+    }
 
-        // Filter buttons
-        document.querySelectorAll('.filter-btn').forEach(btn => {
-            btn.addEventListener('click', function() {
-                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-                this.classList.add('active');
-                currentFilter = this.dataset.filter;
-                renderTable();
-            });
-        });
-
-        // Sort columns
-        document.querySelectorAll('.sortable').forEach(th => {
-            th.addEventListener('click', function() {
-                const newColumn = this.dataset.sort;
-                if (sortColumn === newColumn) {
-                    sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
-                } else {
-                    sortColumn = newColumn;
-                    sortDirection = 'desc';
-                }
-                renderTable();
-            });
-        });
-
-        // Search
-        document.getElementById('searchInput').addEventListener('input', function(e) {
-            const query = e.target.value.toLowerCase();
-            const rows = document.querySelectorAll('#customerTableBody tr');
-            
-            rows.forEach(row => {
-                const text = row.textContent.toLowerCase();
-                row.style.display = text.includes(query) ? '' : 'none';
-            });
-        });
-
-        // View customer detail
-        function viewCustomer(id) {
-            alert(`Customer #${id} detail view will open here`);
-        }
-
-        // Initialize
-        renderTable();
+    // ═══════════════════════════════════════════════════════════════
+    // INIT
+    // ═══════════════════════════════════════════════════════════════
+    loadOverview();
     </script>
 </body>
 </html>

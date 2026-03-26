@@ -1,12 +1,8 @@
-# Force Railway to use Dockerfile instead of Nixpacks
 [phases.setup]
-nixPkgs = []
+nixPkgs = ["python311"]
 
 [phases.install]
-cmds = []
-
-[phases.build]
-cmds = []
+cmds = ["pip install -r requirements.txt"]
 
 [start]
-cmd = "echo 'Use Dockerfile instead'"
+cmd = "python -m uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"
