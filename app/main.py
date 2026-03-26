@@ -168,3 +168,13 @@ if STATIC_DIR.exists():
     app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 
 # Run with: uvicorn app.main:app --host 0.0.0.0 --port 8000
+if __name__ == "__main__":
+    import uvicorn
+    from app.main import app
+
+    uvicorn.run(
+        "app.main:app",
+        host="0.0.0.0",
+        port=8000,
+        reload=True
+    )
