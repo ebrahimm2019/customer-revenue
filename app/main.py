@@ -169,12 +169,17 @@ if STATIC_DIR.exists():
 
 # Run with: uvicorn app.main:app --host 0.0.0.0 --port 8000
 if __name__ == "__main__":
+    # main.py
+    import os
     import uvicorn
-    from app.main import app
+    from fastapi import FastAPI
 
-    uvicorn.run(
-        "app.main:app",
-        host="0.0.0.0",
-        port=8000,
-        reload=True
-    )
+    app = FastAPI()
+
+    if __name__ == "__main__":
+        uvicorn.run(
+            "main:app",
+            host="0.0.0.0",
+            port=int(os.environ.get("PORT", 8000)),
+            reload=True  # Remove in production
+        )
